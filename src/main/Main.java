@@ -125,43 +125,74 @@ public class Main {
 		em.close();
 	}
 	
+	
+	/**
+	 * parametric way to get list of any entity that has a model
+	 * @param <T>
+	 * @param entityInstance
+	 * @param clazz
+	 * @return List<T>
+	 */
+	
+	public static <T> List<T> getAnyEntityList(T entityInstance, Class<T> clazz){		
+		EntityManager em = emf.createEntityManager();
+		List<T> items = em
+			.createQuery("SELECT a FROM " + entityInstance.getClass().getSimpleName() + " a", clazz)
+			.getResultList();
+		em.close();
+		return items;
+	}		
+	
+	
+	/**
+	 * specific way to get list of Ansatt 
+	 */
+	
+	public static List<Ansatt> getAnsattList(){
+		return getAnyEntityList(new Ansatt(), Ansatt.class);
+	}
+	
+	public static List<Prosjekt> getProsjektList(){
+		return getAnyEntityList(new Prosjekt(), Prosjekt.class);
+	}	
+	
+	public static List<Avdeling> getAvdelingList(){
+		return getAnyEntityList(new Avdeling(), Avdeling.class);
+	}
+	
+	public static List<AnsattProsjektPivot> getAnsattProsjektPivotList(){
+		return getAnyEntityList(new AnsattProsjektPivot(), AnsattProsjektPivot.class);		
+	}	
+	
+
+	
 	public static <T1> void printEntityList(List<T1> entities, Class<?> clazz) {
+		String prefix = "(id ";
+		String postfix = ")";
 		int index = 1;
 		for (T1 entity : entities) {
-			/*
 			if(clazz == Ansatt.class){
 				Ansatt casted = (Ansatt) entity;
-				System.out.print(casted.getId());
+				System.out.print(prefix + casted.getId() + postfix);
 			}else if (clazz == Avdeling.class) {
 				Avdeling casted = (Avdeling) entity;
-				System.out.print(casted.getId());
+				System.out.print(prefix + casted.getId() + postfix);
 			}else if (clazz == Prosjekt.class) {
 				Prosjekt casted = (Prosjekt) entity;
-				System.out.print(casted.getId());
+				System.out.print(prefix + casted.getId() + postfix);
 			}else if (clazz == AnsattProsjektPivot.class) {
 				AnsattProsjektPivot casted = (AnsattProsjektPivot) entity;
-				System.out.print(casted.getId());
+				System.out.print(prefix + casted.getId() + postfix);
 			}else {
 				System.out.print(index++);
 			}
-			*/
 
+			System.out.print(" : ");
 			System.out.println(entity);
 		}
 	}
 	
-	public static List<Ansatt> getAnsattList(){
-		EntityManager em = emf.createEntityManager();
-		List<Ansatt> ansattList = em.createQuery("SELECT a FROM Ansatt a", Ansatt.class).getResultList();
-		em.close();
-		return ansattList;
-	}
-	public static List<Prosjekt> getProsjektList(){
-		EntityManager em = emf.createEntityManager();
-		List<Prosjekt> prosjektList = em.createQuery("SELECT a FROM Prosjekt a", Prosjekt.class).getResultList();
-		em.close();
-		return prosjektList;
-	}
+
 		
 	public static void printEntityList(Class<?> classRef, String classRefName) {
 		EntityManager em = emf.createEntityManager();
@@ -204,6 +235,14 @@ public class Main {
 		printAnsattList();
 		printProsjektList();
 		printAnsattProsjektPivotList();
+		
+		/*
+		List<?> items = getAnyEntityList(new Ansatt(), Ansatt.class);
+		for (var a : items) {
+			System.out.println(a.getClass().getSimpleName());
+			System.out.println(a);
+		}
+		*/
 
 		em.close();
 		emf.close();
