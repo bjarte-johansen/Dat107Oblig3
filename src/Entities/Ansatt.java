@@ -138,6 +138,7 @@ public class Ansatt {
 	}
 	
     public String toString() {
+    	/*
     	int n = 8;
     	List<String> fields = new ArrayList<String>();
     	fields.add(formatField("id", id));
@@ -151,10 +152,10 @@ public class Ansatt {
     	String tmp = "";
     	for (int i = 0; i < n; i++) {
     		tmp += fields.get(i) + ", ";
-    	}
-    	
-    	return "Ansatt [\n" + tmp + "]"; 
-    	//return "Ansatt [id=" + id + ", brukernavn=" + brukernavn + ", fornavn=" + fornavn + ", etternavn=" + etternavn + ", ansettelsedato=" + ansettelsedato + ", stilling=" + stilling + ", loennPerMaaned=" + loennPerMaaned + ", avdeling=" + avdeling + "]";
+    	}    	
+    	return "Ansatt [\n" + tmp + "]";
+    	*/ 
+    	return "Ansatt [id=" + id + ", brukernavn=" + brukernavn + ", fornavn=" + fornavn + ", etternavn=" + etternavn + ", ansettelsedato=" + ansettelsedato + ", stilling=" + stilling + ", loennPerMaaned=" + loennPerMaaned + ", avdeling=" + avdeling + "]";
     }
 
 	@Id

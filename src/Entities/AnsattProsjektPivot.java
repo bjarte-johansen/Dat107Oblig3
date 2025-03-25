@@ -16,6 +16,22 @@ public class AnsattProsjektPivot {
 	@GeneratedValue(strategy = GenerationType.IDENTITY) // or AUTO
 	private Integer id;
 	
+	private String rolle;
+	
+	/**
+	 * @return the rolle
+	 */
+	public String getRolle() {
+		return rolle;
+	}
+
+	/**
+	 * @param rolle the rolle to set
+	 */
+	public void setRolle(String rolle) {
+		this.rolle = rolle;
+	}
+
 	@OneToOne
 	@JoinColumn(name="ansattId", foreignKey=@ForeignKey(name="FK_ansattId"))
 	private Ansatt ansatt;
@@ -55,7 +71,7 @@ public class AnsattProsjektPivot {
 		this.ansatt = ansatt;
 	}
 
-	/**
+	/** 
 	 * @return the prosjekt
 	 */
 	public Prosjekt getProsjekt() {
@@ -90,6 +106,7 @@ public class AnsattProsjektPivot {
 		return "AnsattProsjektPivot [id=" + id 
 				+ "\n, ansatt=" + ansatt 
 				+ "\n, prosjekt=" + prosjekt 
+				+ "\n, rolle=" + rolle
 				+ "\n, antallTimer=" + antallTimer + "]";
 	}
 }

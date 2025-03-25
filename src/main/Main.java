@@ -3,53 +3,49 @@ package main;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
 
 import Entities.*;
 
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Persistence;
 
-class DemoData{
-	
-}
+
+
 
 public class Main {
-	static boolean VERBOSE_COMMANDS = true;
+	public static boolean VERBOSE_COMMANDS = true;
 	
-	private static EntityManagerFactory emf = Persistence.createEntityManagerFactory("PersistanceUnit");;
+	public static String CurrentMenuState = "main";
+	
+	public static EntityManagerFactory emf = Persistence.createEntityManagerFactory("PersistanceUnit");;
+	
+	
+	/*
+	 * print verbose output that can be muted by setting
+	 * VERBOSE_COMMANDS to false
+	 */
 	
 	public static void printVerbose(String message) {
         if(VERBOSE_COMMANDS) {
             System.out.println(message);
         }
     }
-	
-	public static LocalDateTime createRandomDate() {
-		LocalDateTime start = LocalDateTime.of(2000, 1, 1, 0, 0);
-		LocalDateTime end = LocalDateTime.of(2025, 12, 31, 23, 59);
 
-		// Convert to epoch seconds
-		long startSec = start.toEpochSecond(ZoneOffset.UTC);
-		long endSec = end.toEpochSecond(ZoneOffset.UTC);
 
-		// Generate random epoch second
-		long randomSec = ThreadLocalRandom.current().nextLong(startSec, endSec);
-
-		// Convert back to LocalDateTime
-		LocalDateTime randomDateTime = LocalDateTime.ofEpochSecond(randomSec, 0, ZoneOffset.UTC);
-		
-		return randomDateTime;
-	}
-	
 	
 	/*
 	 * method to persist any object
 	 */
 	
-	public static <T> void persistObject(T obj) {
+	public static <T> void persistObject(EntityManagerFactory emf, T obj) {
 		EntityManager em = emf.createEntityManager();
 		em.getTransaction().begin();
 		em.persist(obj);
@@ -58,80 +54,10 @@ public class Main {
 	}
 		
 	
-	
-	/*
-	 * method to clear old database data
-	 */
-	
-	public static void deleteDemoData() {
-		var em = emf.createEntityManager();
-		em.getTransaction().begin();
-		em.createQuery("DELETE FROM AnsattProsjektPivot").executeUpdate();		
-		em.createQuery("DELETE FROM Ansatt").executeUpdate();
-		em.createQuery("DELETE FROM Avdeling").executeUpdate();
-		em.createQuery("DELETE FROM Prosjekt").executeUpdate();		
-		em.getTransaction().commit();
-		em.close();
-		
-		printVerbose("-- Old database data cleared");
+	public static <T> void persistObject(T obj) {
+		persistObject(emf, obj);
 	}
-	
-	
-	/*
-	 * method to clear old database data and insert demo data
-	 */
-	
-	public static void createDemoData() {			
-		String fornavn[] = {"Arne", "Kari", "Per", "Ola", "Knut"};
-		String etternavn[] = {"Hansen", "Olsen", "Pettersen", "Nilsen", "Knutson"};
-		String stilling[] = {"Sjef", "Vaskehjelp", "Kokk", "Servitør", "Bartender"};
-		
-		var em = emf.createEntityManager();
-		
-		
-		Avdeling avdeling1 = new Avdeling();
-		avdeling1.setNavn("Kronstad 2");
-		avdeling1.setLederId(null);
-		persistObject(avdeling1);
-		
-		Prosjekt prosjekt1 = new Prosjekt();
-		prosjekt1.setNavn("Kårstø");
-		prosjekt1.setBeskrivelse("Bygging av nytt anlegg");
-		persistObject(prosjekt1);
-		
-		Prosjekt prosjekt2 = new Prosjekt();
-		prosjekt2.setNavn("Mongstad");
-		prosjekt2.setBeskrivelse("Utvikling av eksisterende anlegg");
-		persistObject(prosjekt2);
-		
-		
-		int index = 0;
-		for(int i=0; i<fornavn.length; i++) {
-			Ansatt a1 = new Ansatt();
-			a1.setBrukernavn("bruker" + i);
-			a1.setFornavn(fornavn[i]);
-			a1.setEtternavn(etternavn[i]);
-			a1.setBrukernavn(fornavn[i].toLowerCase() + etternavn[i].substring(0,1).toLowerCase());
-			a1.setAnsettelseDato(createRandomDate());
-			a1.setStilling(stilling[i]);
-			a1.setLoennPerMaaned((float) 550_000 + (int) (Math.random() * 300_000));
-			a1.setAvdeling(avdeling1);
-			persistObject(a1);
-		}
-		
-		List<Ansatt> ansattList = getAnsattList();
-		for (int i = 0; i < ansattList.size(); i++) {
-			AnsattProsjektPivot app = new AnsattProsjektPivot();
-			app.setAnsatt(ansattList.get(i));
-			app.setProsjekt(Math.random() > 0.5 ? prosjekt1 : prosjekt2);
-			app.setAntallTimer((int) (Math.random() * 100));
-			persistObject(app);
-		}
-		
-		em.close();
-		
-		printVerbose("-- New demo data inserted");
-	}
+
 	
 	
 	/**
@@ -178,7 +104,7 @@ public class Main {
 	 * generic methods to print entity lists
 	 */
 	
-	public static <T1> void printEntityList(List<T1> entities, Class<?> clazz) {
+	public static <T1> void printEntityListItems(List<T1> entities, Class<?> clazz) {
 		String prefix = "(id ";
 		String postfix = ")";
 		int index = 1;
@@ -208,14 +134,14 @@ public class Main {
 	public static void printEntityList(Class<?> classRef, String classRefName) {
 		EntityManager em = emf.createEntityManager();
 		
-		List<?> avdelinger = em
+		List<?> items = em
 			.createQuery("SELECT a FROM " + classRefName + " a", classRef)
 			.getResultList();
 		
 		System.out.println("# Liste over " + classRefName + "(e/er/ere):");		
 		
 		// print faktisk liste
-		printEntityList(avdelinger, classRef);
+		printEntityListItems(items, classRef);
 		System.out.println();
 		
 		em.close();
@@ -244,18 +170,203 @@ public class Main {
 	}	
 	
 	
+
+	/*
+	 * find entity by custom attribute
+	 */
+	 
+	public static <T> Ansatt findAnsattByColumn(String key, T value) {
+		var em = emf.createEntityManager(); 
+	    try {
+	        Ansatt item = em.createQuery(
+	            "SELECT i FROM Ansatt i WHERE i." + key + " = :value", Ansatt.class)
+	            .setParameter("value", value)
+	            .getSingleResult();
+	        em.close();
+	        return item;
+	    } catch (NoResultException e) {
+	    	em.close();
+	        return null;
+	    }
+	}
+
+	
+	
+	/*
+	 * read menu choice
+	 */
+	
+	public static Integer readMenuChoiceInt(String message) {
+		if(message != null) {
+			System.out.println(message);
+		}
+		
+		Scanner scanner = new Scanner(System.in);
+		int choice = scanner.hasNextInt() ? scanner.nextInt() : 0;
+		scanner.close();
+		return choice;
+	}
+	
+	public static String readMenuChoiceString(String message) {
+		if(message != null) {
+			System.out.println(message);
+		}
+		
+		Scanner scanner = new Scanner(System.in);
+		String choice = scanner.hasNextLine() ? scanner.nextLine() : "";
+		scanner.close();
+		return choice;
+	}	
+	
+	public static Float readMenuChoiceFloat(String message) {
+		if(message != null) {
+			System.out.println(message);
+		}
+		
+		Scanner scanner = new Scanner(System.in);
+		float choice = scanner.hasNextFloat() ? scanner.nextFloat() : -1.0f;
+		scanner.close();
+		return choice;
+	}	
+	
+	
+	/*
+	 * print item found message
+	 */
+	
+	public static <T> void printItemFoundMessage(T item) {
+		if(item == null) {
+			System.out.println("Ingen resultat funnet");
+		}else {
+			System.out.println("Resultat funnet: ");
+			System.out.println(item);
+		}
+	}
+	
+	
+	/*
+	 * command methods
+	 */
+	
+	public static void cmdFinnAnsattById() {
+		int needle = readMenuChoiceInt("Skriv inn ansatt-id:");		
+		var item = findAnsattByColumn("id", needle);
+		printItemFoundMessage(item);		
+	}
+	
+	public static void cmdFinnAnsattBrukernavn() {
+		String needle = readMenuChoiceString("Skriv inn ansatt-brukernavn:");		
+		Ansatt item = findAnsattByColumn("brukernavn", needle);
+		printItemFoundMessage(item);
+	}
+	
+	public static void print_state_menu() {
+		Map<Integer, String> commands = new HashMap<Integer, String>();
+		commands.put(0, "abort");
+		commands.put(1, "finnAnsattById");
+		commands.put(2, "finnAnsattByBrukernavn");
+		commands.put(3, "listAnsatt");
+		commands.put(4, "oppdateringStillingOgLonn");
+		commands.put(5, "leggTilAnsatt");
+		
+		
+		System.out.println("1. Finn ansatt (id)");
+		System.out.println("2. Finn ansatt (brukernavn)");
+		System.out.println("3. List ansatte");
+		System.out.println("4. Oppdatering stilling og lønn");
+		System.out.println("5. Legg til ansatt");
+		
+		int choice = readMenuChoiceInt("Tast inn ditt valg:");
+		switch(commands.get(choice)) {
+			case "abort":
+				rootMenu();
+				break;
+		
+			case "finnAnsattById":
+			{
+				int needle = readMenuChoiceInt("Skriv inn ansatt-id:");		
+				var item = findAnsattByColumn("id", needle);
+				printItemFoundMessage(item);	
+				break;
+			}
+			
+			case "finnAnsattByBrukernavn":
+			{
+				String needle = readMenuChoiceString("Skriv inn ansatt-brukernavn:");		
+				Ansatt item = findAnsattByColumn("brukernavn", needle);
+				printItemFoundMessage(item);
+				break;
+			}
+			
+			case "listAnsatt": {
+				printAnsattList();
+				break;
+			}
+			
+			case "oppdateringStillingOgLonn":
+			{
+				int needle = readMenuChoiceInt("Skriv inn ansatt-id:");
+				var item = findAnsattByColumn("id", needle);
+				if(item == null) {
+                    System.out.println("Ingen resultat funnet");
+				}else {
+					System.out.println("Resultat funnet: ");
+					String newStilling = readMenuChoiceString("Skriv inn ny stilling:");
+					item.setStilling(newStilling);
+					float newLoenn = readMenuChoiceFloat("Skriv inn ny lønn:");
+					item.setLoennPerMaaned(newLoenn);
+					System.out.println(item);					
+					persistObject(item);
+				}
+				break;
+			}
+			
+			case "leggTilAnsatt": {
+				// set up new Ansatt object
+				Ansatt newAnsatt = new Ansatt();
+				newAnsatt.setFornavn(readMenuChoiceString("Skriv inn fornavn:"));
+				newAnsatt.setEtternavn(readMenuChoiceString("Skriv inn etternavn:"));
+				newAnsatt.setBrukernavn(readMenuChoiceString("Skriv inn brukernavn:"));
+				newAnsatt.setAnsettelseDato(LocalDateTime.now());
+				newAnsatt.setStilling(readMenuChoiceString("Skriv inn stilling:"));
+				newAnsatt.setLoennPerMaaned(readMenuChoiceFloat("Skriv inn lønn:"));
+				newAnsatt.setAvdeling(getAvdelingList().get(0));
+
+				// persist new Ansatt object
+				persistObject(newAnsatt);
+				break;
+			}
+				
+		}
+	}
+	
+	public static void rootMenu() {
+		CurrentMenuState = "menu";
+		printMenu();
+	}
+	
+	public static void printMenu() {
+		switch(CurrentMenuState) {
+			case "menu":
+				print_state_menu();
+				break;
+		}
+	}
 	
 	/*
 	 * main method
-	 */
+	 */	
 
 	public static void main(String[] args) {
 		// delete old data and insert new data
 		// clear old database data
-		deleteDemoData();
-		createDemoData();
+		DemoData.deleteDemoData();
+		DemoData.createDemoData();
+		System.out.println();
 		
 		EntityManager em = emf.createEntityManager();	
+		
+
 		
 		printAvdelingList();
 		printAnsattList();
