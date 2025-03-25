@@ -17,9 +17,15 @@ class DemoData{
 }
 
 public class Main {
+	static boolean VERBOSE_COMMANDS = true;
 	
 	private static EntityManagerFactory emf = Persistence.createEntityManagerFactory("PersistanceUnit");;
 	
+	public static void printVerbose(String message) {
+        if(VERBOSE_COMMANDS) {
+            System.out.println(message);
+        }
+    }
 	
 	public static LocalDateTime createRandomDate() {
 		LocalDateTime start = LocalDateTime.of(2000, 1, 1, 0, 0);
@@ -38,6 +44,11 @@ public class Main {
 		return randomDateTime;
 	}
 	
+	
+	/*
+	 * method to persist any object
+	 */
+	
 	public static <T> void persistObject(T obj) {
 		EntityManager em = emf.createEntityManager();
 		em.getTransaction().begin();
@@ -45,19 +56,14 @@ public class Main {
 		em.getTransaction().commit();
 		em.close();
 	}
-	
-	public static void insertAnsattProsjektPivotData() {
-		var em = emf.createEntityManager();
 		
-		// remove old		
-		em.getTransaction().begin();
-		em.createQuery("DELETE FROM AnsattProsjektPivot").executeUpdate();
-		em.getTransaction().commit();
-		
-		// never called, doesnt do anything yet
-	}
 	
-	public static void clearOldDatabaseData() {
+	
+	/*
+	 * method to clear old database data
+	 */
+	
+	public static void deleteDemoData() {
 		var em = emf.createEntityManager();
 		em.getTransaction().begin();
 		em.createQuery("DELETE FROM AnsattProsjektPivot").executeUpdate();		
@@ -67,15 +73,15 @@ public class Main {
 		em.getTransaction().commit();
 		em.close();
 		
-		System.out.println("-- Old database data cleared");
+		printVerbose("-- Old database data cleared");
 	}
 	
-	public static void insertAnsattList() {
-		// clear old database data
-		clearOldDatabaseData();
-		System.out.println();
-		
-		
+	
+	/*
+	 * method to clear old database data and insert demo data
+	 */
+	
+	public static void createDemoData() {			
 		String fornavn[] = {"Arne", "Kari", "Per", "Ola", "Knut"};
 		String etternavn[] = {"Hansen", "Olsen", "Pettersen", "Nilsen", "Knutson"};
 		String stilling[] = {"Sjef", "Vaskehjelp", "Kokk", "Servitør", "Bartender"};
@@ -123,6 +129,8 @@ public class Main {
 		}
 		
 		em.close();
+		
+		printVerbose("-- New demo data inserted");
 	}
 	
 	
@@ -166,10 +174,15 @@ public class Main {
 	
 
 	
+	/*
+	 * generic methods to print entity lists
+	 */
+	
 	public static <T1> void printEntityList(List<T1> entities, Class<?> clazz) {
 		String prefix = "(id ";
 		String postfix = ")";
 		int index = 1;
+		
 		for (T1 entity : entities) {
 			if(clazz == Ansatt.class){
 				Ansatt casted = (Ansatt) entity;
@@ -191,9 +204,7 @@ public class Main {
 			System.out.println(entity);
 		}
 	}
-	
 
-		
 	public static void printEntityList(Class<?> classRef, String classRefName) {
 		EntityManager em = emf.createEntityManager();
 		
@@ -210,6 +221,12 @@ public class Main {
 		em.close();
 	}
 	
+	
+	
+	/*
+	 * specific methods to print entity lists	
+	 */
+	
 	public static void printAvdelingList() {		
 		printEntityList(Avdeling.class, "Avdeling");
 	}
@@ -225,9 +242,18 @@ public class Main {
 	public static void printAnsattProsjektPivotList() {
 		printEntityList(AnsattProsjektPivot.class, "AnsattProsjektPivot");
 	}	
+	
+	
+	
+	/*
+	 * main method
+	 */
 
 	public static void main(String[] args) {
-		insertAnsattList();
+		// delete old data and insert new data
+		// clear old database data
+		deleteDemoData();
+		createDemoData();
 		
 		EntityManager em = emf.createEntityManager();	
 		

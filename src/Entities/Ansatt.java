@@ -2,6 +2,8 @@ package Entities;
 
 import java.sql.Date;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
@@ -131,8 +133,28 @@ public class Ansatt {
 	 * @return descriptive string
 	 */
 	
+	public static <T> String formatField(String key, T value) {
+	    return key + ": " + value;
+	}
+	
     public String toString() {
-    	return "Ansatt [id=" + id + ", brukernavn=" + brukernavn + ", fornavn=" + fornavn + ", etternavn=" + etternavn + ", ansettelsedato=" + ansettelsedato + ", stilling=" + stilling + ", loennPerMaaned=" + loennPerMaaned + ", avdeling=" + avdeling + "]";
+    	int n = 8;
+    	List<String> fields = new ArrayList<String>();
+    	fields.add(formatField("id", id));
+    	fields.add(formatField("brukernavn", brukernavn));
+    	fields.add(formatField("fornavn", fornavn));
+    	fields.add(formatField("etternavn", etternavn));
+    	fields.add(formatField("ansettelsedato", ansettelsedato));
+    	fields.add(formatField("stilling", stilling));
+    	fields.add(formatField("loennPerMaaned", loennPerMaaned));
+    	fields.add(formatField("avdeling", avdeling));
+    	String tmp = "";
+    	for (int i = 0; i < n; i++) {
+    		tmp += fields.get(i) + ", ";
+    	}
+    	
+    	return "Ansatt [\n" + tmp + "]"; 
+    	//return "Ansatt [id=" + id + ", brukernavn=" + brukernavn + ", fornavn=" + fornavn + ", etternavn=" + etternavn + ", ansettelsedato=" + ansettelsedato + ", stilling=" + stilling + ", loennPerMaaned=" + loennPerMaaned + ", avdeling=" + avdeling + "]";
     }
 
 	@Id
