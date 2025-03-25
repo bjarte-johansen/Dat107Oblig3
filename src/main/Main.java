@@ -18,14 +18,81 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Persistence;
 
 
+class EMF{	
+	public static EntityManagerFactory emf = Persistence.createEntityManagerFactory("PersistanceUnit");
+	
+	public static EntityManagerFactory getEMF() {
+		return emf;
+	}
+	public static EntityManager getEM() {
+		return emf.createEntityManager();
+	}
+}
+
+class AnsattDAO{
+	/*
+	 * find entity by custom attribute
+	 */
+		 
+	public static <T> Ansatt findByColumnEquals(String key, T value) {
+		var em = EMF.getEM(); 
+	    try {
+	        Ansatt item = em.createQuery(
+	            "SELECT i FROM Ansatt i WHERE i." + key + " = :value", Ansatt.class)
+	            .setParameter("value", value)
+	            .getSingleResult();
+	        em.close();
+	        return item;
+	    } catch (NoResultException e) {
+	    	em.close();
+	        return null;
+	    }
+	}
+	
+	public static Ansatt findById(int id) {
+		return findByColumnEquals("id", id);
+	}
+
+	public static Ansatt findByBrukernavn(String brukernavn) {
+		return findByColumnEquals("brukernavn", brukernavn);
+	}
+}
+
+
+class AvdelingDAO{
+	public static <T> Avdeling findByColumnEquals(String key, T value) {
+		var em = EMF.getEM(); 
+	    try {
+	    	Avdeling item = em.createQuery(
+	            "SELECT i FROM Avdeling i WHERE i." + key + " = :value", Avdeling.class)
+	            .setParameter("value", value)
+	            .getSingleResult();
+	        em.close();
+	        return item;
+	    } catch (NoResultException e) {
+	    	em.close();
+	        return null;
+	    }
+	}
+	
+	public static Avdeling findById(int id) {
+		return findByColumnEquals("id", id);
+	}	
+}
 
 
 public class Main {
+	// true if verbose output should be printed
 	public static boolean VERBOSE_COMMANDS = true;
-	
+
+	// state machine state
 	public static String CurrentMenuState = "main";
 	
-	public static EntityManagerFactory emf = Persistence.createEntityManagerFactory("PersistanceUnit");;
+	// entity manager factory
+	public static EntityManagerFactory emf = EMF.getEMF();
+	
+	// scanner
+	private static final Scanner scanner = new Scanner(System.in);	
 	
 	
 	/*
@@ -176,18 +243,7 @@ public class Main {
 	 */
 	 
 	public static <T> Ansatt findAnsattByColumn(String key, T value) {
-		var em = emf.createEntityManager(); 
-	    try {
-	        Ansatt item = em.createQuery(
-	            "SELECT i FROM Ansatt i WHERE i." + key + " = :value", Ansatt.class)
-	            .setParameter("value", value)
-	            .getSingleResult();
-	        em.close();
-	        return item;
-	    } catch (NoResultException e) {
-	    	em.close();
-	        return null;
-	    }
+		return AnsattDAO.findByColumnEquals(key, value);
 	}
 
 	
@@ -199,33 +255,45 @@ public class Main {
 	public static Integer readMenuChoiceInt(String message) {
 		if(message != null) {
 			System.out.println(message);
+			System.out.flush();
 		}
 		
-		Scanner scanner = new Scanner(System.in);
-		int choice = scanner.hasNextInt() ? scanner.nextInt() : 0;
-		scanner.close();
+		while (!scanner.hasNextInt()) {
+		    System.out.println("Invalid input. Try again:");
+		    scanner.next(); // discard invalid token
+		}	
+		int choice = scanner.nextInt();
+		System.out.println();
 		return choice;
 	}
 	
 	public static String readMenuChoiceString(String message) {
 		if(message != null) {
 			System.out.println(message);
+			System.out.flush();
 		}
 		
-		Scanner scanner = new Scanner(System.in);
-		String choice = scanner.hasNextLine() ? scanner.nextLine() : "";
-		scanner.close();
+		while (!scanner.hasNextLine()) {
+		    System.out.println("Invalid input. Try again:");
+		    scanner.next(); // discard invalid token
+		}	
+		String choice = scanner.nextLine();
+		System.out.println();
 		return choice;
 	}	
 	
 	public static Float readMenuChoiceFloat(String message) {
 		if(message != null) {
 			System.out.println(message);
+			System.out.flush();
 		}
 		
-		Scanner scanner = new Scanner(System.in);
-		float choice = scanner.hasNextFloat() ? scanner.nextFloat() : -1.0f;
-		scanner.close();
+		while (!scanner.hasNextFloat()) {
+		    System.out.println("Invalid input. Try again:");
+		    scanner.next(); // discard invalid token
+		}				
+		float choice = scanner.nextFloat();
+		System.out.println();
 		return choice;
 	}	
 	
@@ -248,18 +316,6 @@ public class Main {
 	 * command methods
 	 */
 	
-	public static void cmdFinnAnsattById() {
-		int needle = readMenuChoiceInt("Skriv inn ansatt-id:");		
-		var item = findAnsattByColumn("id", needle);
-		printItemFoundMessage(item);		
-	}
-	
-	public static void cmdFinnAnsattBrukernavn() {
-		String needle = readMenuChoiceString("Skriv inn ansatt-brukernavn:");		
-		Ansatt item = findAnsattByColumn("brukernavn", needle);
-		printItemFoundMessage(item);
-	}
-	
 	public static void print_state_menu() {
 		Map<Integer, String> commands = new HashMap<Integer, String>();
 		commands.put(0, "abort");
@@ -270,11 +326,14 @@ public class Main {
 		commands.put(5, "leggTilAnsatt");
 		
 		
-		System.out.println("1. Finn ansatt (id)");
-		System.out.println("2. Finn ansatt (brukernavn)");
-		System.out.println("3. List ansatte");
-		System.out.println("4. Oppdatering stilling og lønn");
-		System.out.println("5. Legg til ansatt");
+		System.out.println("# MENY");
+		System.out.println("\t1. Finn ansatt (id)");
+		System.out.println("\t2. Finn ansatt (brukernavn)");
+		System.out.println("\t3. List ansatte");
+		System.out.println("\t4. Oppdatering stilling og lønn");
+		System.out.println("\t5. Legg til ansatt");
+		System.out.println();
+		System.out.flush();
 		
 		int choice = readMenuChoiceInt("Tast inn ditt valg:");
 		switch(commands.get(choice)) {
@@ -284,16 +343,16 @@ public class Main {
 		
 			case "finnAnsattById":
 			{
-				int needle = readMenuChoiceInt("Skriv inn ansatt-id:");		
-				var item = findAnsattByColumn("id", needle);
+				int needle = readMenuChoiceInt("Skriv inn ansatt-id:");					
+				var item = AnsattDAO.findById(needle);
 				printItemFoundMessage(item);	
 				break;
 			}
 			
 			case "finnAnsattByBrukernavn":
 			{
-				String needle = readMenuChoiceString("Skriv inn ansatt-brukernavn:");		
-				Ansatt item = findAnsattByColumn("brukernavn", needle);
+				String needle = readMenuChoiceString("Skriv inn ansatt-brukernavn:");					
+				Ansatt item = AnsattDAO.findByBrukernavn(needle);
 				printItemFoundMessage(item);
 				break;
 			}
@@ -305,7 +364,7 @@ public class Main {
 			
 			case "oppdateringStillingOgLonn":
 			{
-				int needle = readMenuChoiceInt("Skriv inn ansatt-id:");
+				int needle = readMenuChoiceInt("Skriv inn ansatt-id:");				
 				var item = findAnsattByColumn("id", needle);
 				if(item == null) {
                     System.out.println("Ingen resultat funnet");
@@ -336,19 +395,25 @@ public class Main {
 				persistObject(newAnsatt);
 				break;
 			}
-				
+			
+			default:
+                System.out.println("ugyldig valg");
 		}
+		System.out.println();
+		
+		rootMenu();
 	}
 	
 	public static void rootMenu() {
-		CurrentMenuState = "menu";
+		CurrentMenuState = "main";
 		printMenu();
 	}
 	
 	public static void printMenu() {
 		switch(CurrentMenuState) {
-			case "menu":
+			case "main":
 				print_state_menu();
+				System.out.flush();
 				break;
 		}
 	}
@@ -367,11 +432,12 @@ public class Main {
 		EntityManager em = emf.createEntityManager();	
 		
 
-		
+		/*
 		printAvdelingList();
 		printAnsattList();
 		printProsjektList();
 		printAnsattProsjektPivotList();
+		*/
 		
 		/*
 		List<?> items = getAnyEntityList(new Ansatt(), Ansatt.class);
@@ -380,6 +446,8 @@ public class Main {
 			System.out.println(a);
 		}
 		*/
+		
+		printMenu();
 
 		em.close();
 		emf.close();
