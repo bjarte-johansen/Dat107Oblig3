@@ -18,7 +18,12 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Persistence;
 
 
-class EMF{	
+/*
+ * since its static, put it into its own class so we can access it from anywhere
+ * if we put it in its own file
+ */
+
+class StaticEMF{	
 	public static EntityManagerFactory emf = Persistence.createEntityManagerFactory("PersistanceUnit");
 	
 	public static EntityManagerFactory getEMF() {
@@ -27,58 +32,18 @@ class EMF{
 	public static EntityManager getEM() {
 		return emf.createEntityManager();
 	}
-}
-
-class AnsattDAO{
-	/*
-	 * find entity by custom attribute
-	 */
-		 
-	public static <T> Ansatt findByColumnEquals(String key, T value) {
-		var em = EMF.getEM(); 
-	    try {
-	        Ansatt item = em.createQuery(
-	            "SELECT i FROM Ansatt i WHERE i." + key + " = :value", Ansatt.class)
-	            .setParameter("value", value)
-	            .getSingleResult();
-	        em.close();
-	        return item;
-	    } catch (NoResultException e) {
-	    	em.close();
-	        return null;
-	    }
-	}
 	
-	public static Ansatt findById(int id) {
-		return findByColumnEquals("id", id);
-	}
-
-	public static Ansatt findByBrukernavn(String brukernavn) {
-		return findByColumnEquals("brukernavn", brukernavn);
+	public static void close() {
+		emf.close();
 	}
 }
 
 
-class AvdelingDAO{
-	public static <T> Avdeling findByColumnEquals(String key, T value) {
-		var em = EMF.getEM(); 
-	    try {
-	    	Avdeling item = em.createQuery(
-	            "SELECT i FROM Avdeling i WHERE i." + key + " = :value", Avdeling.class)
-	            .setParameter("value", value)
-	            .getSingleResult();
-	        em.close();
-	        return item;
-	    } catch (NoResultException e) {
-	    	em.close();
-	        return null;
-	    }
-	}
-	
-	public static Avdeling findById(int id) {
-		return findByColumnEquals("id", id);
-	}	
-}
+
+
+/*
+ * main class
+ */
 
 
 public class Main {
@@ -89,10 +54,9 @@ public class Main {
 	public static String CurrentMenuState = "main";
 	
 	// entity manager factory
-	public static EntityManagerFactory emf = EMF.getEMF();
+	public static EntityManagerFactory emf = StaticEMF.getEMF();
 	
-	// scanner
-	private static final Scanner scanner = new Scanner(System.in);	
+
 	
 	
 	/*
@@ -113,7 +77,7 @@ public class Main {
 	 */
 	
 	public static <T> void persistObject(EntityManagerFactory emf, T obj) {
-		EntityManager em = emf.createEntityManager();
+		EntityManager em = StaticEMF.getEM();
 		em.getTransaction().begin();
 		em.persist(obj);
 		em.getTransaction().commit();
@@ -177,6 +141,7 @@ public class Main {
 		int index = 1;
 		
 		for (T1 entity : entities) {
+			// get id from entity-object if they are of certain classes
 			if(clazz == Ansatt.class){
 				Ansatt casted = (Ansatt) entity;
 				System.out.print(prefix + casted.getId() + postfix);
@@ -190,7 +155,7 @@ public class Main {
 				AnsattProsjektPivot casted = (AnsattProsjektPivot) entity;
 				System.out.print(prefix + casted.getId() + postfix);
 			}else {
-				System.out.print(index++);
+				System.out.print("unknown");
 			}
 
 			System.out.print(" : ");
@@ -220,82 +185,11 @@ public class Main {
 	 * specific methods to print entity lists	
 	 */
 	
-	public static void printAvdelingList() {		
-		printEntityList(Avdeling.class, "Avdeling");
-	}
+	public static void printAvdelingList() { printEntityList(Avdeling.class, "Avdeling"); }	
+	public static void printAnsattList() { printEntityList(Ansatt.class, "Ansatt"); }		
+	public static void printProsjektList() { printEntityList(Prosjekt.class, "Prosjekt"); }
+	public static void printAnsattProsjektPivotList() {	printEntityList(AnsattProsjektPivot.class, "AnsattProsjektPivot"); }	
 	
-	public static void printAnsattList() {		
-		printEntityList(Ansatt.class, "Ansatt");
-	}	
-	
-	public static void printProsjektList() {
-		printEntityList(Prosjekt.class, "Prosjekt");
-	}
-	
-	public static void printAnsattProsjektPivotList() {
-		printEntityList(AnsattProsjektPivot.class, "AnsattProsjektPivot");
-	}	
-	
-	
-
-	/*
-	 * find entity by custom attribute
-	 */
-	 
-	public static <T> Ansatt findAnsattByColumn(String key, T value) {
-		return AnsattDAO.findByColumnEquals(key, value);
-	}
-
-	
-	
-	/*
-	 * read menu choice
-	 */
-	
-	public static Integer readMenuChoiceInt(String message) {
-		if(message != null) {
-			System.out.println(message);
-			System.out.flush();
-		}
-		
-		while (!scanner.hasNextInt()) {
-		    System.out.println("Invalid input. Try again:");
-		    scanner.next(); // discard invalid token
-		}	
-		int choice = scanner.nextInt();
-		System.out.println();
-		return choice;
-	}
-	
-	public static String readMenuChoiceString(String message) {
-		if(message != null) {
-			System.out.println(message);
-			System.out.flush();
-		}
-		
-		while (!scanner.hasNextLine()) {
-		    System.out.println("Invalid input. Try again:");
-		    scanner.next(); // discard invalid token
-		}	
-		String choice = scanner.nextLine();
-		System.out.println();
-		return choice;
-	}	
-	
-	public static Float readMenuChoiceFloat(String message) {
-		if(message != null) {
-			System.out.println(message);
-			System.out.flush();
-		}
-		
-		while (!scanner.hasNextFloat()) {
-		    System.out.println("Invalid input. Try again:");
-		    scanner.next(); // discard invalid token
-		}				
-		float choice = scanner.nextFloat();
-		System.out.println();
-		return choice;
-	}	
 	
 	
 	/*
@@ -335,7 +229,7 @@ public class Main {
 		System.out.println();
 		System.out.flush();
 		
-		int choice = readMenuChoiceInt("Tast inn ditt valg:");
+		int choice = TextInput.readInt("Tast inn ditt valg:");
 		switch(commands.get(choice)) {
 			case "abort":
 				rootMenu();
@@ -343,7 +237,7 @@ public class Main {
 		
 			case "finnAnsattById":
 			{
-				int needle = readMenuChoiceInt("Skriv inn ansatt-id:");					
+				int needle = TextInput.readInt("Skriv inn ansatt-id:");					
 				var item = AnsattDAO.findById(needle);
 				printItemFoundMessage(item);	
 				break;
@@ -351,7 +245,7 @@ public class Main {
 			
 			case "finnAnsattByBrukernavn":
 			{
-				String needle = readMenuChoiceString("Skriv inn ansatt-brukernavn:");					
+				String needle = TextInput.readLine("Skriv inn ansatt-brukernavn:");					
 				Ansatt item = AnsattDAO.findByBrukernavn(needle);
 				printItemFoundMessage(item);
 				break;
@@ -364,15 +258,15 @@ public class Main {
 			
 			case "oppdateringStillingOgLonn":
 			{
-				int needle = readMenuChoiceInt("Skriv inn ansatt-id:");				
-				var item = findAnsattByColumn("id", needle);
+				int needle = TextInput.readInt("Skriv inn ansatt-id:");				
+				var item = AnsattDAO.findById(needle);
 				if(item == null) {
                     System.out.println("Ingen resultat funnet");
 				}else {
 					System.out.println("Resultat funnet: ");
-					String newStilling = readMenuChoiceString("Skriv inn ny stilling:");
+					String newStilling = TextInput.readLine("Skriv inn ny stilling:");
 					item.setStilling(newStilling);
-					float newLoenn = readMenuChoiceFloat("Skriv inn ny lønn:");
+					float newLoenn = TextInput.readFloat("Skriv inn ny lønn:");
 					item.setLoennPerMaaned(newLoenn);
 					System.out.println(item);					
 					persistObject(item);
@@ -383,12 +277,12 @@ public class Main {
 			case "leggTilAnsatt": {
 				// set up new Ansatt object
 				Ansatt newAnsatt = new Ansatt();
-				newAnsatt.setFornavn(readMenuChoiceString("Skriv inn fornavn:"));
-				newAnsatt.setEtternavn(readMenuChoiceString("Skriv inn etternavn:"));
-				newAnsatt.setBrukernavn(readMenuChoiceString("Skriv inn brukernavn:"));
+				newAnsatt.setFornavn(TextInput.readLine("Skriv inn fornavn:"));
+				newAnsatt.setEtternavn(TextInput.readLine("Skriv inn etternavn:"));
+				newAnsatt.setBrukernavn(TextInput.readLine("Skriv inn brukernavn:"));
 				newAnsatt.setAnsettelseDato(LocalDateTime.now());
-				newAnsatt.setStilling(readMenuChoiceString("Skriv inn stilling:"));
-				newAnsatt.setLoennPerMaaned(readMenuChoiceFloat("Skriv inn lønn:"));
+				newAnsatt.setStilling(TextInput.readLine("Skriv inn stilling:"));
+				newAnsatt.setLoennPerMaaned(TextInput.readFloat("Skriv inn lønn:"));
 				newAnsatt.setAvdeling(getAvdelingList().get(0));
 
 				// persist new Ansatt object
@@ -429,7 +323,7 @@ public class Main {
 		DemoData.createDemoData();
 		System.out.println();
 		
-		EntityManager em = emf.createEntityManager();	
+//		EntityManager em = emf.createEntityManager();	
 		
 
 		/*
@@ -449,8 +343,10 @@ public class Main {
 		
 		printMenu();
 
-		em.close();
+//		em.close();
 		emf.close();
+		
+		StaticEMF.close();
 	}
 
 }
