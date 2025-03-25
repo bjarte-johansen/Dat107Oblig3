@@ -33,14 +33,18 @@ public class TextInput {
 			System.out.flush();
 		}
 
-		while (!scanner.hasNextLine()) {
-		    System.out.println("Invalid input. Try again:");
-		    scanner.next(); // discard invalid token
-		}
+	    String line = scanner.nextLine();
+	    if(line.trim().isEmpty()) {
+	    	line = scanner.nextLine();
+	    }
+	    
+	    while (line.trim().isEmpty()) {
+	        System.out.println("Invalid input. Try again:");
+	        line = scanner.nextLine();
+	    }
 
-		String choice = scanner.nextLine();
-		System.out.println();
-		return choice;
+	    System.out.println();
+	    return line;
 	}	
 	
 	public static Float readFloat(String message) {

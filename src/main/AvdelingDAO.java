@@ -4,8 +4,8 @@ import Entities.Avdeling;
 import jakarta.persistence.NoResultException;
 
 public class AvdelingDAO{
-	public static <T> Avdeling findByColumnEquals(String key, T value) {
-		var em = EMF.getEM(); 
+	public static <T> Avdeling findOneByColumnEquals(String key, T value) {
+		var em = StaticEMF.getEM(); 
 	    try {
 	    	Avdeling item = em.createQuery(
 	            "SELECT i FROM Avdeling i WHERE i." + key + " = :value", Avdeling.class)
@@ -20,6 +20,6 @@ public class AvdelingDAO{
 	}
 	
 	public static Avdeling findById(int id) {
-		return findByColumnEquals("id", id);
+		return findOneByColumnEquals("id", id);
 	}	
 }

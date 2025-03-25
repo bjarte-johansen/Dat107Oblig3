@@ -64,19 +64,19 @@ public class DemoData {
 		Avdeling avdeling1 = new Avdeling();
 		avdeling1.setNavn("Kronstad 2");
 		avdeling1.setLederId(null);
-		Main.persistObject(avdeling1);
+		Main.saveEntity(avdeling1, Avdeling::getId);
 		
 		
 		// sett inn prosjekter
 		Prosjekt prosjekt1 = new Prosjekt();
 		prosjekt1.setNavn("Kårstø");
 		prosjekt1.setBeskrivelse("Bygging av nytt anlegg");
-		Main.persistObject(prosjekt1);
+		Main.createEntity(prosjekt1);
 		
 		Prosjekt prosjekt2 = new Prosjekt();
 		prosjekt2.setNavn("Mongstad");
 		prosjekt2.setBeskrivelse("Utvikling av eksisterende anlegg");
-		Main.persistObject(prosjekt2);
+		Main.createEntity(prosjekt2);
 		
 
 		// sett inn ansatte
@@ -90,7 +90,7 @@ public class DemoData {
 			a1.setStilling(stilling[i]);
 			a1.setLoennPerMaaned((float) 550_000 + (int) (Math.random() * 300_000));
 			a1.setAvdeling(avdeling1);
-			Main.persistObject(a1);
+			Main.createEntity(a1);
 		}
 		
 		// sett inn ansatt-prosjekt koblinger
@@ -101,7 +101,7 @@ public class DemoData {
 			app.setProsjekt(Math.random() > 0.5 ? prosjekt1 : prosjekt2);
 			app.setAntallTimer((int) (Math.random() * 100));
 			app.setRolle(rolle[i]);
-			Main.persistObject(app);
+			Main.createEntity(app);
 		}
 		
 		em.close();

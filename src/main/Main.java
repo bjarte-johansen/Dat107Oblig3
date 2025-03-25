@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
 
 import Entities.*;
 
@@ -76,18 +77,36 @@ public class Main {
 	 * method to persist any object
 	 */
 	
-	public static <T> void persistObject(EntityManagerFactory emf, T obj) {
+	public static <T, ID> void saveEntity(T entity, Function<T, ID> idGetter) {
+		EntityManager em = StaticEMF.getEM();	
+		
+	    em.getTransaction().begin();
+	    if (idGetter.apply(entity) == null) {
+	        em.persist(entity);
+	    } else {
+	        em.merge(entity);
+	    }
+	    em.getTransaction().commit();
+	    
+	    em.close();
+	}	
+
+	public static <T> void createEntity(T obj) {
 		EntityManager em = StaticEMF.getEM();
 		em.getTransaction().begin();
 		em.persist(obj);
 		em.getTransaction().commit();
 		em.close();
 	}
-		
-	
-	public static <T> void persistObject(T obj) {
-		persistObject(emf, obj);
+	/*
+	public static <T> void updateObject(T obj) {
+		EntityManager em = StaticEMF.getEM();
+		em.getTransaction().begin();
+		em.merge(obj);
+		em.getTransaction().commit();
+		em.close();
 	}
+	*/
 
 	
 	
@@ -230,7 +249,15 @@ public class Main {
 		System.out.flush();
 		
 		int choice = TextInput.readInt("Tast inn ditt valg:");
-		switch(commands.get(choice)) {
+		String cmd = commands.get(choice);
+		if(cmd == null) {
+			System.out.println("ugyldig valg");
+			System.out.println();
+			rootMenu();
+			return;
+		}
+		
+		switch(cmd) {
 			case "abort":
 				rootMenu();
 				break;
@@ -269,7 +296,7 @@ public class Main {
 					float newLoenn = TextInput.readFloat("Skriv inn ny lønn:");
 					item.setLoennPerMaaned(newLoenn);
 					System.out.println(item);					
-					persistObject(item);
+					saveEntity(item, Ansatt::getId);
 				}
 				break;
 			}
@@ -286,7 +313,7 @@ public class Main {
 				newAnsatt.setAvdeling(getAvdelingList().get(0));
 
 				// persist new Ansatt object
-				persistObject(newAnsatt);
+				saveEntity(newAnsatt, Ansatt::getId);
 				break;
 			}
 			

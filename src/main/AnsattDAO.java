@@ -8,7 +8,7 @@ public class AnsattDAO{
 	 * find entity by custom attribute
 	 */
 		 
-	public static <T> Ansatt findByColumnEquals(String key, T value) {
+	public static <T> Ansatt findOneByColumnEquals(String key, T value) {
 		var em = StaticEMF.getEM(); 
 	    try {
 	        Ansatt item = em.createQuery(
@@ -24,10 +24,10 @@ public class AnsattDAO{
 	}
 	
 	public static Ansatt findById(int id) {
-		return findByColumnEquals("id", id);
+		return findOneByColumnEquals("id", id);
 	}
 
 	public static Ansatt findByBrukernavn(String brukernavn) {
-		return findByColumnEquals("brukernavn", brukernavn);
+		return findOneByColumnEquals("brukernavn", brukernavn);
 	}
 }
