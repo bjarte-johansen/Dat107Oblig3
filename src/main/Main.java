@@ -77,11 +77,32 @@ public class Main {
 	 * method to persist any object
 	 */
 	
+	public static <T, ID> void saveEntity(T entity, String op) {
+		if(op == null || op.length() == 0) {
+			throw new IllegalArgumentException("Invalid operation (must be persist|merge)");
+		}
+		
+		EntityManager em = StaticEMF.getEM();	
+		
+	    em.getTransaction().begin();
+	    if (op.equals("persist")) {
+	        em.persist(entity);
+	    } else if (op.equals("merge")){
+	        em.merge(entity);
+	    }else {
+	    	throw  new IllegalArgumentException("Invalid operation c(reate) or u(pdate)");
+	    }
+	    
+	    em.getTransaction().commit();
+	    
+	    em.close();
+	}		
+	
 	public static <T, ID> void saveEntity(T entity, Function<T, ID> idGetter) {
 		EntityManager em = StaticEMF.getEM();	
 		
 	    em.getTransaction().begin();
-	    if (idGetter.apply(entity) == null) {
+	    if ((idGetter == null) || (idGetter.apply(entity) == null)) {
 	        em.persist(entity);
 	    } else {
 	        em.merge(entity);
@@ -154,29 +175,32 @@ public class Main {
 	 * generic methods to print entity lists
 	 */
 	
+	public static <T> Integer getEntityId(T entity, Class<?> clazz) {
+		// get id from entity-object if they are of certain classes
+		if(clazz == Ansatt.class){
+			var e = ((Ansatt) entity);
+			return e.getId();
+		}else if (clazz == Avdeling.class) {
+			var e = (Avdeling) entity;
+			return e.getId();
+		}else if (clazz == Prosjekt.class) {
+			var e = (Prosjekt) entity;
+			return e.getId();
+		}else if (clazz == AnsattProsjektPivot.class) {
+			var e = (AnsattProsjektPivot) entity;
+			return e.getId();
+		}
+		
+		throw new IllegalArgumentException("Unknown class");
+	}
+	
 	public static <T1> void printEntityListItems(List<T1> entities, Class<?> clazz) {
 		String prefix = "(id ";
 		String postfix = ")";
-		int index = 1;
 		
 		for (T1 entity : entities) {
-			// get id from entity-object if they are of certain classes
-			if(clazz == Ansatt.class){
-				Ansatt casted = (Ansatt) entity;
-				System.out.print(prefix + casted.getId() + postfix);
-			}else if (clazz == Avdeling.class) {
-				Avdeling casted = (Avdeling) entity;
-				System.out.print(prefix + casted.getId() + postfix);
-			}else if (clazz == Prosjekt.class) {
-				Prosjekt casted = (Prosjekt) entity;
-				System.out.print(prefix + casted.getId() + postfix);
-			}else if (clazz == AnsattProsjektPivot.class) {
-				AnsattProsjektPivot casted = (AnsattProsjektPivot) entity;
-				System.out.print(prefix + casted.getId() + postfix);
-			}else {
-				System.out.print("unknown");
-			}
-
+			Integer entityId = getEntityId(entity, clazz);
+			System.out.print((entityId != null) ? (prefix + entityId + postfix) : "unknown");
 			System.out.print(" : ");
 			System.out.println(entity);
 		}
@@ -232,19 +256,22 @@ public class Main {
 	public static void print_state_menu() {
 		Map<Integer, String> commands = new HashMap<Integer, String>();
 		commands.put(0, "abort");
-		commands.put(1, "finnAnsattById");
-		commands.put(2, "finnAnsattByBrukernavn");
-		commands.put(3, "listAnsatt");
-		commands.put(4, "oppdateringStillingOgLonn");
-		commands.put(5, "leggTilAnsatt");
+		commands.put(1, "resetDatabase");
+		commands.put(2, "finnAnsattById");
+		commands.put(3, "finnAnsattByBrukernavn");
+		commands.put(4, "listAnsatt");
+		commands.put(5, "oppdateringStillingOgLonn");
+		commands.put(6, "leggTilAnsatt");
 		
-		
+
+		int menuItemIndex = 1;
 		System.out.println("# MENY");
-		System.out.println("\t1. Finn ansatt (id)");
-		System.out.println("\t2. Finn ansatt (brukernavn)");
-		System.out.println("\t3. List ansatte");
-		System.out.println("\t4. Oppdatering stilling og lønn");
-		System.out.println("\t5. Legg til ansatt");
+		System.out.println("\t" + (menuItemIndex++) + ". Reset database");		
+		System.out.println("\t" + (menuItemIndex++) + ". Finn ansatt (id)");
+		System.out.println("\t" + (menuItemIndex++) + ". Finn ansatt (brukernavn)");
+		System.out.println("\t" + (menuItemIndex++) + ". List ansatte");
+		System.out.println("\t" + (menuItemIndex++) + ". Oppdatering stilling og lønn");
+		System.out.println("\t" + (menuItemIndex++) + ". Legg til ansatt");
 		System.out.println();
 		System.out.flush();
 		
@@ -260,6 +287,12 @@ public class Main {
 		switch(cmd) {
 			case "abort":
 				rootMenu();
+				break;
+				
+			case "resetDatabase":
+				DemoData.deleteDemoData();
+				DemoData.createDemoData();
+				System.out.println();
 				break;
 		
 			case "finnAnsattById":

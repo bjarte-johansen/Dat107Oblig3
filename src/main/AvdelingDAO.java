@@ -4,6 +4,10 @@ import Entities.Avdeling;
 import jakarta.persistence.NoResultException;
 
 public class AvdelingDAO{
+	/*
+	 * find entity by custom attribute
+	 */
+	
 	public static <T> Avdeling findOneByColumnEquals(String key, T value) {
 		var em = StaticEMF.getEM(); 
 	    try {

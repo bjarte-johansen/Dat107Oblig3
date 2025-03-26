@@ -82,7 +82,6 @@ public class DemoData {
 		// sett inn ansatte
 		for(int i=0; i<fornavn.length; i++) {
 			Ansatt a1 = new Ansatt();
-			a1.setBrukernavn("bruker" + i);
 			a1.setFornavn(fornavn[i]);
 			a1.setEtternavn(etternavn[i]);
 			a1.setBrukernavn(fornavn[i].toLowerCase() + etternavn[i].substring(0,1).toLowerCase());
