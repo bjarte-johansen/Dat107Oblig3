@@ -37,10 +37,10 @@ public class DemoData {
 	public static void deleteDemoData() {
 		var em = Main.emf.createEntityManager();
 		em.getTransaction().begin();
-		em.createQuery("DELETE FROM AnsattProsjektPivot").executeUpdate();		
-		em.createQuery("DELETE FROM Ansatt").executeUpdate();
-		em.createQuery("DELETE FROM Avdeling").executeUpdate();
-		em.createQuery("DELETE FROM Prosjekt").executeUpdate();		
+		em.createNativeQuery("TRUNCATE TABLE AnsattProsjektPivot, Avdeling, Ansatt, Prosjekt CASCADE").executeUpdate();
+		//em.createNativeQuery("DELETE FROM Avdeling CASCADE").executeUpdate();		
+		//em.createNativeQuery("DELETE FROM Ansatt CASCADE").executeUpdate();
+		//3em.createNativeQuery("DELETE FROM Prosjekt CASCADE").executeUpdate();		
 		em.getTransaction().commit();
 		em.close();
 		
@@ -62,9 +62,20 @@ public class DemoData {
 		
 		// sett inn avdeling
 		Avdeling avdeling1 = new Avdeling();
-		avdeling1.setNavn("Kronstad 2");
-		avdeling1.setLederId(null);
+		avdeling1.setNavn("Odontologi");
+		avdeling1.setLeder(null);
 		Main.saveEntity(avdeling1, Avdeling::getId);
+		
+		Avdeling avdeling2 = new Avdeling();
+		avdeling2.setNavn("Pediatri");
+		avdeling2.setLeder(null);
+		Main.saveEntity(avdeling2, Avdeling::getId);
+		
+		Avdeling avdeling3 = new Avdeling();
+		avdeling3.setNavn("Radiologi");
+		avdeling3.setLeder(null);
+		Main.saveEntity(avdeling3, Avdeling::getId);
+				
 		
 		
 		// sett inn prosjekter
@@ -92,6 +103,9 @@ public class DemoData {
 			Main.createEntity(a1);
 		}
 		
+		avdeling1.setLeder(AnsattDAO.findOne());
+		Main.saveEntity(avdeling1, Avdeling::getId);
+		
 		// sett inn ansatt-prosjekt koblinger
 		List<Ansatt> ansattList = Main.getAnsattList();
 		for (int i = 0; i < ansattList.size(); i++) {
@@ -103,6 +117,7 @@ public class DemoData {
 			Main.createEntity(app);
 		}
 		
+		//em.flush();
 		em.close();
 		
 		Main.printVerbose("-- New demo data inserted");

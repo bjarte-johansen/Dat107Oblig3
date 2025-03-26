@@ -1,5 +1,7 @@
 package Entities;
 
+import java.util.List;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
@@ -8,6 +10,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import main.ProsjektDAO;
+import main.StaticEMF;
 
 @Entity
 @Table(schema = "public")
@@ -19,6 +23,10 @@ public class Prosjekt {
 	private String navn;
 	private String beskrivelse;
 	
+	
+	public List<AnsattProsjektPivot> getDeltagere(){
+		return ProsjektDAO.findParticipants(this.id);
+	};
 	
 	/**
 	 * @return the id

@@ -4,6 +4,7 @@ import java.sql.Date;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
@@ -11,12 +12,48 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(schema = "public")
 public class Ansatt {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY) // or AUTO
+	private Integer id;
+	
+	private String brukernavn;
+	private String fornavn;
+	private String etternavn;
+	
+	private LocalDateTime ansettelsedato;
+	private String stilling;
+	private Float loennPerMaaned;
+	
+	@ManyToOne
+	@JoinColumn(name = "avdelingId")
+	private Avdeling avdeling;	
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(id);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		Ansatt other = (Ansatt) obj;
+		return Objects.equals(id, other.id);
+	}
+
 	/**
 	 * @return the id
 	 */
@@ -157,20 +194,4 @@ public class Ansatt {
     	*/ 
     	return "Ansatt [id=" + id + ", brukernavn=" + brukernavn + ", fornavn=" + fornavn + ", etternavn=" + etternavn + ", ansettelsedato=" + ansettelsedato + ", stilling=" + stilling + ", loennPerMaaned=" + loennPerMaaned + ", avdeling=" + avdeling + "]";
     }
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY) // or AUTO
-	private Integer id;
-	
-	private String brukernavn;
-	private String fornavn;
-	private String etternavn;
-	
-	private LocalDateTime ansettelsedato;
-	private String stilling;
-	private Float loennPerMaaned;
-	
-	@OneToOne
-	@JoinColumn(name = "AvdelingId", foreignKey = @ForeignKey(name = "avdeling_id_fk"))
-	private Avdeling avdeling;
 }

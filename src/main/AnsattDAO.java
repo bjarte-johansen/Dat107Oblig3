@@ -1,5 +1,7 @@
 package main;
 
+import java.util.List;
+
 import Entities.Ansatt;
 import jakarta.persistence.NoResultException;
 
@@ -23,11 +25,45 @@ public class AnsattDAO{
 	    }
 	}
 	
+	
+	/*
+	 * find first
+	 */
+	
+	public static <T> Ansatt findOne() {
+		var em = StaticEMF.getNewEM(); 
+	    try {
+	    	var query = em.createQuery("SELECT i FROM Ansatt i", Ansatt.class);
+	    	query.setMaxResults(1);
+	    	Ansatt item = query.getSingleResult();
+	        return item;
+	    } catch (NoResultException e) {
+	        return null;
+	    } finally {
+	    	em.close();	    	
+	    }
+	}
+	
+	
+	
+	/*
+	 * 
+	 */
+	
 	public static Ansatt findById(int id) {
 		return findOneByColumnEquals("id", id);
 	}
 
 	public static Ansatt findByBrukernavn(String brukernavn) {
 		return findOneByColumnEquals("brukernavn", brukernavn);
+	}
+	
+	public static List<Ansatt> findByAvdelingId(int id) {
+		var em = StaticEMF.getNewEM();
+		var query = em.createQuery("SELECT i FROM Ansatt i WHERE i.avdeling.id = :id", Ansatt.class);
+		query.setParameter("id", id);
+		var item = query.getResultList();
+		em.close();
+		return item;
 	}
 }

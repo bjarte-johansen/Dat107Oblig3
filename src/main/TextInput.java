@@ -6,6 +6,15 @@ public class TextInput {
 	// scanner
 	private static final Scanner scanner = new Scanner(System.in);	
 	
+
+	public static void waitUntillInput() {
+		scanner.nextLine();		
+	
+        System.out.print("Press Enter to continue...");		
+		
+        scanner.nextLine();		
+    }
+	
 	
 	/*
 	 * read menu choice

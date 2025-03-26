@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,28 +20,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Persistence;
 
 
-/*
- * since its static, put it into its own class so we can access it from anywhere
- * if we put it in its own file
- */
-
-class StaticEMF{	
-	public static EntityManagerFactory emf = Persistence.createEntityManagerFactory("PersistanceUnit");
-	
-	public static EntityManagerFactory getNewEMF() {
-		return emf;
-	}
-	public static EntityManager getNewEM() {
-		return emf.createEntityManager();
-	}
-	
-	public static void close() {
-		emf.close();
-	}
-}
-
-
-
 
 /*
  * main class
@@ -50,9 +29,6 @@ class StaticEMF{
 public class Main {
 	// true if verbose output should be printed
 	public static boolean VERBOSE_COMMANDS = true;
-
-	// state machine state
-	public static String CurrentMenuState = "main";
 	
 	// entity manager factory
 	public static EntityManagerFactory emf = StaticEMF.getNewEMF();
@@ -116,20 +92,11 @@ public class Main {
 		EntityManager em = StaticEMF.getNewEM();
 		em.getTransaction().begin();
 		em.persist(obj);
+		em.flush();		
 		em.getTransaction().commit();
 		em.close();
 	}
-	/*
-	public static <T> void updateObject(T obj) {
-		EntityManager em = StaticEMF.getNewEM();
-		em.getTransaction().begin();
-		em.merge(obj);
-		em.getTransaction().commit();
-		em.close();
-	}
-	*/
 
-	
 	
 	/**
 	 * parametric way to get list of any entity that has a model
@@ -195,14 +162,10 @@ public class Main {
 		}
 	}
 	
-	public static <T> void printEntity(T entity) {
-		System.out.println(entity);
-	}
-	
-	public static void printEntityList(Class<?> classRef) {		
-		List<?> items = getAnyEntityList(classRef);
+	public static void printEntityList(Class<?> classRef) {				
+		System.out.println("# Liste over " + classRef.getSimpleName() + "(e/er/ere):");
 		
-		System.out.println("# Liste over " + classRef.getSimpleName() + "(e/er/ere):");		
+		List<?> items = getAnyEntityList(classRef);		
 		printEntityListItems(items, classRef);	
 		
 		System.out.println();
@@ -237,143 +200,300 @@ public class Main {
 	
 	
 	/*
-	 * command methods
+	 * actions
 	 */
 	
+	
+	public static void action_employee_list() { 
+		printAnsattList(); 
+	}
+	
+	public static void action_employee_find_by_id(){
+		int needle = TextInput.readInt("Skriv inn ansatt-id:");					
+		var item = AnsattDAO.findById(needle);
+		printItemFoundMessage(item);	
+	}
+	
+	public static void action_employee_find_by_username(){
+		String needle = TextInput.readLine("Skriv inn ansatt-brukernavn:");					
+		var item = AnsattDAO.findByBrukernavn(needle);
+		printItemFoundMessage(item);
+	}	
+
+	public static void action_set_position_and_salary(){
+		int needle = TextInput.readInt("Skriv inn ansatt-id:");				
+		var item = AnsattDAO.findById(needle);
+		if(item == null) {
+            System.out.println("Ingen resultat funnet");
+		}else {
+			System.out.println("Resultat funnet: ");
+			String newStilling = TextInput.readLine("Skriv inn ny stilling:");
+			item.setStilling(newStilling);
+			
+			float newLoenn = TextInput.readFloat("Skriv inn ny lønn:");
+			item.setLoennPerMaaned(newLoenn);
+			System.out.println(item);
+			
+			saveEntity(item, Ansatt::getId);
+		}
+	}
+	
+	public static void action_employee_add() {
+		// print notice
+		System.out.println("// ps: vi har satt ansettelsedato til now() i java:");
+		
+		// cache variables
+		LocalDateTime nowDateTime = LocalDateTime.now();
+		
+		List<Avdeling> avdelingList = getAvdelingList();
+		if (avdelingList.size() == 0) {
+			System.out.println("Ingen avdelinger funnet. Kan ikke legge til ansatt.");
+			return;
+		}
+		
+		// set up new Ansatt object
+		Ansatt newAnsatt = new Ansatt();
+		newAnsatt.setFornavn(TextInput.readLine("Skriv inn fornavn:"));
+		newAnsatt.setEtternavn(TextInput.readLine("Skriv inn etternavn:"));
+		newAnsatt.setBrukernavn(TextInput.readLine("Skriv inn brukernavn:"));
+		newAnsatt.setAnsettelseDato(nowDateTime);
+		newAnsatt.setStilling(TextInput.readLine("Skriv inn stilling:"));
+		newAnsatt.setLoennPerMaaned(TextInput.readFloat("Skriv inn lønn:"));
+		
+		// select avdeling untill suitable is found
+		while(true) {
+			printAvdelingList();
+			int avdelingId = TextInput.readInt("Velg en avdeling (id):");
+			Avdeling avdeling = AvdelingDAO.findById(avdelingId);
+			if (avdeling != null) {
+				newAnsatt.setAvdeling(avdeling);						
+				break;
+			}
+			
+			System.out.println("Ingen avdeling funnet med id " + avdelingId);
+		}
+		
+		
+		// persist new Ansatt object
+		saveEntity(newAnsatt, Ansatt::getId);
+	}
+
+	public static void action_employee_find_by_department()	{			
+		int needle = TextInput.readInt("Skriv inn avdeling-id:");
+		var item = AvdelingDAO.findById(needle);
+		
+		if (item == null) {
+			System.out.println("Ingen resultat funnet");
+		} else {
+			System.out.println("Resultat funnet: ");
+			System.out.println(item);
+			
+			List<Ansatt> ansatte = item.getAnsatte();
+			System.out.println("Ansatte: (" + ansatte.size() + ")");
+			for (Ansatt ansatt : ansatte) {
+				if(ansatt.equals(item.getLeder())) {
+					System.out.print("[Leder ");
+					System.out.print(ansatt);
+					System.out.println("]");
+				}else {
+					System.out.println(ansatt);
+				}
+			}
+			
+			System.out.println("Leder (sjef):");
+			System.out.println(item.getLeder());
+		}
+	}
+	
+	public static void action_employee_update_department(){
+		// find ansatt
+		int ansattId = TextInput.readInt("Skriv inn ansatt-id:");
+		Ansatt ansatt = AnsattDAO.findById(ansattId);
+		if (ansatt == null) {
+			System.out.println("Ingen ansatt funnet med id " + ansattId);
+			break;
+		}				
+		
+		// find avdeling
+		printAvdelingList();
+		int avdelingId = TextInput.readInt("Skriv inn avdeling-id:");				
+		Avdeling avdeling = AvdelingDAO.findById(avdelingId);
+		if (avdeling == null) {
+			System.out.println("Ingen avdeling funnet med id " + avdelingId);
+			break;
+		}
+		
+		ansatt.setAvdeling(avdeling);
+		saveEntity(ansatt, Ansatt::getId);
+	}
+	
+	// department actions
+
+	public static void action_department_add() {
+		// opprett object
+		Avdeling avdeling = new Avdeling();
+		
+		// less inn navn
+		avdeling.setNavn(TextInput.readLine("Skriv inn avdelingens navn:"));
+		
+		// print ansatte
+		printAnsattList();
+		
+		// read input and find ansatt
+		int leaderId = TextInput.readInt("Skriv inn leder-ansatt-id:");
+		Ansatt newLeader = AnsattDAO.findById(leaderId);
+		if(newLeader == null) {
+			System.out.println("Ingen leder med id funnet");
+			return;
+		}
+	
+		// set ansatt's avdeling
+		avdeling.setLeder(newLeader);
+		saveEntity(avdeling, Avdeling::getId);
+		
+		// update ansatt avdeling
+		newLeader.setAvdeling(avdeling);
+		saveEntity(newLeader, Ansatt::getId);
+	}
+
+	public static void action_department_find_by_id(){
+		int needle = TextInput.readInt("Skriv inn avdeling-id:");					
+		var item = AvdelingDAO.findById(needle);
+		printItemFoundMessage(item);	
+	}	
+	
+	public static void action_department_list() {
+		printAvdelingList();
+	}	
+	
+	
+	// project actions
+	
+	public static void action_project_list() {
+		printProsjektList();
+	}
+	
+	public static void action_project_find_by_id() {
+		int needle = TextInput.readInt("Skriv inn prosjekt-id:");
+		var item = ProsjektDAO.findById(needle);
+		printItemFoundMessage(item);
+	}	
+	
+	
+	
+	/*
+	 * menu methods
+	 */
+		
+	public static void print_menu_item(int index, String text) {
+		String menuPrefix = ""; // replace with for instance "\t"
+		
+		if(index == -1) {
+			System.out.println("-");
+            return;
+		}
+		
+		System.out.println(menuPrefix + index + ". " + text);	
+	}
+	
+	@FunctionalInterface
+	interface MenuAction{
+		void execute();
+	}
+	
 	public static void print_state_menu() {
-		Map<Integer, String> commands = new HashMap<Integer, String>();
+		// menu header
+		System.out.println("-".repeat(20));
+		System.out.println("   MENY");
+		System.out.println("-".repeat(20));
+		System.out.println();
+
+		
+		Map<Integer, MenuAction> commands = new LinkedHashMap<>();
+		/*
 		commands.put(0, "abort");
-		commands.put(1, "finnAnsattById");
+		commands.put(1, "listAnsatt");
 		commands.put(2, "finnAnsattByBrukernavn");
-		commands.put(3, "listAnsatt");
+
 		commands.put(4, "oppdateringStillingOgLonn");
 		commands.put(5, "leggTilAnsatt");
-		commands.put(6, "resetDatabase");		
+		commands.put(6, "listAnsattByAvdeling");
+		commands.put(7, "oppdaterAnsattAvdeling");		
+		commands.put(8, "listAvdeling");		
+		commands.put(9, "finnAvdelingById");
+		commands.put(10, "leggTilAvdeling");
+		commands.put(11, "listProsjekt");
+		commands.put(12,  "finnProsjektById");
+		 */		
 		
-		int menuItemIndex = 1;
-		System.out.println("# MENY");
-		System.out.println("\t" + (menuItemIndex++) + ". Finn ansatt (id)");
-		System.out.println("\t" + (menuItemIndex++) + ". Finn ansatt (brukernavn)");
-		System.out.println("\t" + (menuItemIndex++) + ". List ansatte");
-		System.out.println("\t" + (menuItemIndex++) + ". Oppdatering stilling og lønn");
-		System.out.println("\t" + (menuItemIndex++) + ". Legg til ansatt");
-		System.out.println("\t" + (menuItemIndex++) + ". Reset database");				
+		
+		// items
+		commands.put(1, Main::action_employee_list);		
+		print_menu_item(1, "Ansatt, list");
+
+		commands.put(2, Main::action_employee_find_by_id);		
+		print_menu_item(2, "Ansatt, finn etter id");
+		
+		commands.put(3, Main::action_employee_find_by_username);		
+		print_menu_item(3, "Ansatt, finn etter brukernavn");
+		
+		commands.put(4, Main::action_set_position_and_salary);
+		print_menu_item(4, "Ansatt, endre stilling og lønn");
+		
+		commands.put(5, Main::action_employee_add);
+		print_menu_item(5, "Ansatt, legg til");
+		
+		commands.put(6, Main::action_employee_find_by_department);
+		print_menu_item(6, "Ansatt, finn etter avdeling");
+		
+		commands.put(7,  Main::action_employee_update_department);
+		print_menu_item(7, "Ansatt, endre avdeling");	
+		
+		print_menu_item(-1, null);
+		
+		commands.put(8, Main::action_department_list);
+		print_menu_item(8, "Avdeling, list");
+		
+		commands.put(9, Main::action_department_find_by_id);
+		print_menu_item(9, "Avdeling, finn etter id");
+		
+		commands.put(10, Main::action_department_add);
+		print_menu_item(10, "Avdeling, legg til");
+		
+		print_menu_item(-1, null);
+		
+		commands.put(11, Main::action_project_list);
+		print_menu_item(11, "Prosjekt, list");
+		
+		commands.put(12, Main::action_project_find_by_id);
+		print_menu_item(12, "Prosjekt, finn etter id");
+		
+		// flush it
 		System.out.println();
 		System.out.flush();
 		
 		int choice = TextInput.readInt("Tast inn ditt valg:");
-		String cmd = commands.get(choice);
-		if(cmd == null) {
+		MenuAction action = commands.get(choice);
+		if(action == null) {
 			System.out.println("ugyldig valg");
 			System.out.println();
-			rootMenu();
-			return;
+		}else {
+			action.execute();
 		}
-		
-		System.out.println("Du valgte " + cmd);
+			
 		System.out.println();
 		
-		switch(cmd) {
-			case "abort":
-				rootMenu();
-				break;
-				
-			case "resetDatabase":
-				DemoData.deleteDemoData();
-				DemoData.createDemoData();
-				System.out.println();
-				break;
+		TextInput.waitUntillInput();
 		
-			case "finnAnsattById":
-			{
-				int needle = TextInput.readInt("Skriv inn ansatt-id:");					
-				var item = AnsattDAO.findById(needle);
-				printItemFoundMessage(item);	
-				break;
-			}
-			
-			case "finnAnsattByBrukernavn":
-			{
-				String needle = TextInput.readLine("Skriv inn ansatt-brukernavn:");					
-				var item = AnsattDAO.findByBrukernavn(needle);
-				printItemFoundMessage(item);
-				break;
-			}
-			
-			case "listAnsatt": 
-			{
-				printAnsattList();
-				break;
-			}
-			
-			case "oppdateringStillingOgLonn":
-			{
-				int needle = TextInput.readInt("Skriv inn ansatt-id:");				
-				var item = AnsattDAO.findById(needle);
-				if(item == null) {
-                    System.out.println("Ingen resultat funnet");
-				}else {
-					System.out.println("Resultat funnet: ");
-					String newStilling = TextInput.readLine("Skriv inn ny stilling:");
-					item.setStilling(newStilling);
-					
-					float newLoenn = TextInput.readFloat("Skriv inn ny lønn:");
-					item.setLoennPerMaaned(newLoenn);
-					System.out.println(item);
-					
-					saveEntity(item, Ansatt::getId);
-				}
-				break;
-			}
-			
-			case "leggTilAnsatt": 
-			{
-				// print notice
-				System.out.println("// ps: vi har satt ansettelsedato til now() i java:");
-				
-				// cache variables
-				LocalDateTime dtNow = LocalDateTime.now();
-				
-				List<Avdeling> avdelingList = getAvdelingList();
-				if (avdelingList.size() == 0) {
-					System.out.println("Ingen avdelinger funnet. Kan ikke legge til ansatt.");
-					break;
-				}
-				
-				// set up new Ansatt object
-				Ansatt newAnsatt = new Ansatt();
-				newAnsatt.setFornavn(TextInput.readLine("Skriv inn fornavn:"));
-				newAnsatt.setEtternavn(TextInput.readLine("Skriv inn etternavn:"));
-				newAnsatt.setBrukernavn(TextInput.readLine("Skriv inn brukernavn:"));
-				newAnsatt.setAnsettelseDato(dtNow);
-				newAnsatt.setStilling(TextInput.readLine("Skriv inn stilling:"));
-				newAnsatt.setLoennPerMaaned(TextInput.readFloat("Skriv inn lønn:"));
-				newAnsatt.setAvdeling(avdelingList.getFirst());
-
-				// persist new Ansatt object
-				saveEntity(newAnsatt, Ansatt::getId);
-				break;
-			}
-			
-			default:
-                System.out.println("ugyldig valg");
-		}
-		System.out.println();
-		
-		rootMenu();
-	}
-	
-	public static void rootMenu() {
-		CurrentMenuState = "main";
 		printMenu();
 	}
 	
 	public static void printMenu() {
-		switch(CurrentMenuState) {
-			case "main":
-				print_state_menu();
-				System.out.flush();
-				break;
+		try {
+			print_state_menu();
+			System.out.flush();
+		}catch(Exception e) {
+			printMenu();
 		}
 	}
 	
@@ -382,35 +502,25 @@ public class Main {
 	 */	
 
 	public static void main(String[] args) {
-		// delete old data and insert new data
-		// clear old database data
-		DemoData.deleteDemoData();
-		DemoData.createDemoData();
-		System.out.println();
+		// handle database reseting		
+		boolean allwaysResetDatabase = true;
+		boolean showResetDatabaseOption = true;
+		int resetDatabaseFlag = 0;
 		
-//		EntityManager em = emf.createEntityManager();	
-		
-
-		/*
-		printAvdelingList();
-		printAnsattList();
-		printProsjektList();
-		printAnsattProsjektPivotList();
-		*/
-		
-		/*
-		List<?> items = getAnyEntityList(new Ansatt(), Ansatt.class);
-		for (var a : items) {
-			System.out.println(a.getClass().getSimpleName());
-			System.out.println(a);
+		if (!allwaysResetDatabase && showResetDatabaseOption) {
+			resetDatabaseFlag = TextInput.readInt("Vil du resete databasen? (1=ja, 0=nei):");
 		}
-		*/
 		
+		if(allwaysResetDatabase || resetDatabaseFlag == 1) {
+			DemoData.deleteDemoData();
+            DemoData.createDemoData();
+            System.out.println();
+		}
+		
+		// print menu
 		printMenu();
 
-//		em.close();
-		emf.close();
-		
+		// close entity manager factory
 		StaticEMF.close();
 	}
 

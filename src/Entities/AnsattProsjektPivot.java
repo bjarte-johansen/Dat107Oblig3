@@ -1,5 +1,6 @@
 package Entities;
 
+import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
@@ -16,7 +17,16 @@ public class AnsattProsjektPivot {
 	@GeneratedValue(strategy = GenerationType.IDENTITY) // or AUTO
 	private Integer id;
 	
-	private String rolle;
+	@OneToOne
+	@JoinColumn(name="ansattId")
+	private Ansatt ansatt;
+	
+	@OneToOne
+	@JoinColumn(name="prosjektId")
+	private Prosjekt prosjekt;
+	
+	private String rolle;	
+	private Integer antallTimer;
 	
 	/**
 	 * @return the rolle
@@ -32,15 +42,7 @@ public class AnsattProsjektPivot {
 		this.rolle = rolle;
 	}
 
-	@OneToOne
-	@JoinColumn(name="ansattId", foreignKey=@ForeignKey(name="FK_ansattId"))
-	private Ansatt ansatt;
-	
-	@OneToOne
-	@JoinColumn(name="prosjektId", foreignKey=@ForeignKey(name="FK_prosjektId"))
-	private Prosjekt prosjekt;
-	
-	private Integer antallTimer;
+
 
 	/**
 	 * @return the id
