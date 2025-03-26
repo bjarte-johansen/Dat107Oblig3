@@ -20,6 +20,45 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Persistence;
 
 
+/*
+ * menu item class
+ */
+
+@FunctionalInterface
+interface MenuAction{
+	void execute();
+};
+
+
+class MenuItem{
+	private int key;
+	private String text;
+    private MenuAction action;
+    
+    public MenuItem(int key, String text, MenuAction action) {
+    	this.key = key;
+        this.text = text;
+        this.action = action;
+    }
+    
+    public void execute() {
+        action.execute();
+    }
+    
+	public String getText() {
+		return text;
+	}
+	public int getKey() {
+		return key;
+	}
+    
+    public String toString() {
+        return String.format("%d. ", key) + text;
+    }
+};
+
+
+
 
 /*
  * main class
@@ -27,14 +66,25 @@ import jakarta.persistence.Persistence;
 
 
 public class Main {
+	/*
+	 * interface for menu actions
+	 */
+	
+
+
+
+	// menu items
+	private static Map<Integer, MenuItem> menuItems = new LinkedHashMap<>();
+	private static int menuItemInvalidIndex = -1;
+	
+	
 	// true if verbose output should be printed
 	public static boolean VERBOSE_COMMANDS = true;
 	
 	// entity manager factory
-	public static EntityManagerFactory emf = StaticEMF.getNewEMF();
+	//private static EntityManagerFactory emf = StaticEMF.getNewEMF();
 	
 
-	
 	
 	/*
 	 * print verbose output that can be muted by setting
@@ -311,7 +361,7 @@ public class Main {
 		Ansatt ansatt = AnsattDAO.findById(ansattId);
 		if (ansatt == null) {
 			System.out.println("Ingen ansatt funnet med id " + ansattId);
-			break;
+			return;
 		}				
 		
 		// find avdeling
@@ -320,7 +370,7 @@ public class Main {
 		Avdeling avdeling = AvdelingDAO.findById(avdelingId);
 		if (avdeling == null) {
 			System.out.println("Ingen avdeling funnet med id " + avdelingId);
-			break;
+			return;
 		}
 		
 		ansatt.setAvdeling(avdeling);
@@ -385,116 +435,68 @@ public class Main {
 	 * menu methods
 	 */
 		
-	public static void print_menu_item(int index, String text) {
-		String menuPrefix = ""; // replace with for instance "\t"
-		
-		if(index == -1) {
-			System.out.println("-");
-            return;
-		}
-		
-		System.out.println(menuPrefix + index + ". " + text);	
-	}
-	
-	@FunctionalInterface
-	interface MenuAction{
-		void execute();
-	}
-	
-	public static void print_state_menu() {
+	public static void printMenu() {
 		// menu header
 		System.out.println("-".repeat(20));
 		System.out.println("   MENY");
 		System.out.println("-".repeat(20));
 		System.out.println();
 
-		
-		Map<Integer, MenuAction> commands = new LinkedHashMap<>();
-		/*
-		commands.put(0, "abort");
-		commands.put(1, "listAnsatt");
-		commands.put(2, "finnAnsattByBrukernavn");
-
-		commands.put(4, "oppdateringStillingOgLonn");
-		commands.put(5, "leggTilAnsatt");
-		commands.put(6, "listAnsattByAvdeling");
-		commands.put(7, "oppdaterAnsattAvdeling");		
-		commands.put(8, "listAvdeling");		
-		commands.put(9, "finnAvdelingById");
-		commands.put(10, "leggTilAvdeling");
-		commands.put(11, "listProsjekt");
-		commands.put(12,  "finnProsjektById");
-		 */		
-		
-		
-		// items
-		commands.put(1, Main::action_employee_list);		
-		print_menu_item(1, "Ansatt, list");
-
-		commands.put(2, Main::action_employee_find_by_id);		
-		print_menu_item(2, "Ansatt, finn etter id");
-		
-		commands.put(3, Main::action_employee_find_by_username);		
-		print_menu_item(3, "Ansatt, finn etter brukernavn");
-		
-		commands.put(4, Main::action_set_position_and_salary);
-		print_menu_item(4, "Ansatt, endre stilling og lønn");
-		
-		commands.put(5, Main::action_employee_add);
-		print_menu_item(5, "Ansatt, legg til");
-		
-		commands.put(6, Main::action_employee_find_by_department);
-		print_menu_item(6, "Ansatt, finn etter avdeling");
-		
-		commands.put(7,  Main::action_employee_update_department);
-		print_menu_item(7, "Ansatt, endre avdeling");	
-		
-		print_menu_item(-1, null);
-		
-		commands.put(8, Main::action_department_list);
-		print_menu_item(8, "Avdeling, list");
-		
-		commands.put(9, Main::action_department_find_by_id);
-		print_menu_item(9, "Avdeling, finn etter id");
-		
-		commands.put(10, Main::action_department_add);
-		print_menu_item(10, "Avdeling, legg til");
-		
-		print_menu_item(-1, null);
-		
-		commands.put(11, Main::action_project_list);
-		print_menu_item(11, "Prosjekt, list");
-		
-		commands.put(12, Main::action_project_find_by_id);
-		print_menu_item(12, "Prosjekt, finn etter id");
-		
-		// flush it
+		for (var entry : menuItems.entrySet()) {
+			if (entry.getKey() < 0) {
+				System.out.println("-");
+			} else {
+				System.out.println(entry.getValue().toString());
+			}
+		}
+				
+		// print empty line and flush
 		System.out.println();
 		System.out.flush();
 		
 		int choice = TextInput.readInt("Tast inn ditt valg:");
-		MenuAction action = commands.get(choice);
-		if(action == null) {
-			System.out.println("ugyldig valg");
+		MenuItem selectedMenuItem = menuItems.get(choice);
+		if(selectedMenuItem == null) {
+			System.out.println("Ugyldig valg");
 			System.out.println();
 		}else {
-			action.execute();
+			try {
+				selectedMenuItem.execute();
+			}catch(Exception e) {
+			}
+			System.out.println();			
 		}
-			
-		System.out.println();
 		
+		// wait untill user presses enter
 		TextInput.waitUntillInput();
 		
 		printMenu();
 	}
 	
-	public static void printMenu() {
-		try {
-			print_state_menu();
-			System.out.flush();
-		}catch(Exception e) {
-			printMenu();
+	public static void addMenuItem(int index, String text, MenuAction action) {				
+		if(index < 0) {
+			menuItems.put(menuItemInvalidIndex--, new MenuItem(index >= 0 ? index : -1, text, action));
+		}else {		
+			menuItems.put(index, new MenuItem(index, text, action));
 		}
+	}
+	
+	public static void createMenu() {
+		// items
+		addMenuItem(1, "Ansatt, list", Main::action_employee_list);	
+		addMenuItem(2, "Ansatt, finn etter id", Main::action_employee_find_by_id);	
+		addMenuItem(3, "Ansatt, finn etter brukernavn", Main::action_employee_find_by_username);
+		addMenuItem(4, "Ansatt, endre stilling og lønn", Main::action_set_position_and_salary);
+		addMenuItem(5, "Ansatt, legg til", Main::action_employee_add);
+		addMenuItem(6, "Ansatt, finn etter avdeling", Main::action_employee_find_by_department);		
+		addMenuItem(7, "Ansatt, endre avdeling", Main::action_employee_update_department);			
+		addMenuItem(-1, null, null);
+		addMenuItem(8, "Avdeling, list", Main::action_department_list);
+		addMenuItem(9, "Avdeling, finn etter id", Main::action_department_find_by_id);		
+		addMenuItem(10, "Avdeling, legg til", Main::action_department_add);		
+		addMenuItem(-1, null, null);
+		addMenuItem(11, "Prosjekt, list", Main::action_project_list);
+		addMenuItem(12, "Prosjekt, finn etter id", Main::action_project_find_by_id);
 	}
 	
 	/*
@@ -516,6 +518,9 @@ public class Main {
             DemoData.createDemoData();
             System.out.println();
 		}
+		
+		// create menu
+		createMenu();
 		
 		// print menu
 		printMenu();

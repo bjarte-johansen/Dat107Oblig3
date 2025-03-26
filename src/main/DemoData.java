@@ -35,7 +35,7 @@ public class DemoData {
 	 */
 	
 	public static void deleteDemoData() {
-		var em = Main.emf.createEntityManager();
+		var em = StaticEMF.getNewEM();
 		em.getTransaction().begin();
 		em.createNativeQuery("TRUNCATE TABLE AnsattProsjektPivot, Avdeling, Ansatt, Prosjekt CASCADE").executeUpdate();
 		//em.createNativeQuery("DELETE FROM Avdeling CASCADE").executeUpdate();		
@@ -58,7 +58,7 @@ public class DemoData {
 		String stilling[] = {"Sjef", "Vaskehjelp", "Kokk", "Servitør", "Bartender"};
 		String rolle[] = {"Leder", "Assistent", "Sekretær", "Arbeider", "IT-ansvarlig"};
 		
-		var em = Main.emf.createEntityManager();
+		var em = StaticEMF.getNewEM();
 		
 		// sett inn avdeling
 		Avdeling avdeling1 = new Avdeling();
