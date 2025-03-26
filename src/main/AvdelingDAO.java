@@ -9,7 +9,7 @@ public class AvdelingDAO{
 	 */
 	
 	public static <T> Avdeling findOneByColumnEquals(String key, T value) {
-		var em = StaticEMF.getEM(); 
+		var em = StaticEMF.getNewEM(); 
 	    try {
 	    	Avdeling item = em.createQuery(
 	            "SELECT i FROM Avdeling i WHERE i." + key + " = :value", Avdeling.class)

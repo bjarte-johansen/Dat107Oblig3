@@ -17,9 +17,10 @@ public class TextInput {
 			System.out.flush();
 		}
 
+		// skip invalid tokens, with error message
 		while (!scanner.hasNextInt()) {
 		    System.out.println("Invalid input. Try again:");
-		    scanner.next(); // discard invalid token
+		    scanner.next(); 
 		}
 
 		int choice = scanner.nextInt();
@@ -33,11 +34,13 @@ public class TextInput {
 			System.out.flush();
 		}
 
+		// skip first invalid token, without error message		
 	    String line = scanner.nextLine();
 	    if(line.trim().isEmpty()) {
 	    	line = scanner.nextLine();
 	    }
-	    
+
+		// skip invalid tokens, with error message	    
 	    while (line.trim().isEmpty()) {
 	        System.out.println("Invalid input. Try again:");
 	        line = scanner.nextLine();
@@ -53,9 +56,10 @@ public class TextInput {
 			System.out.flush();
 		}
 
+		// skip invalid tokens, with error message		
 		while (!scanner.hasNextFloat()) {
 		    System.out.println("Invalid input. Try again:");
-		    scanner.next(); // discard invalid token
+		    scanner.next(); 
 		}
 		
 		float choice = scanner.nextFloat();

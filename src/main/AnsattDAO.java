@@ -9,7 +9,7 @@ public class AnsattDAO{
 	 */
 		 
 	public static <T> Ansatt findOneByColumnEquals(String key, T value) {
-		var em = StaticEMF.getEM(); 
+		var em = StaticEMF.getNewEM(); 
 	    try {
 	        Ansatt item = em.createQuery(
 	            "SELECT i FROM Ansatt i WHERE i." + key + " = :value", Ansatt.class)

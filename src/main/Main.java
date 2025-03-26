@@ -27,10 +27,10 @@ import jakarta.persistence.Persistence;
 class StaticEMF{	
 	public static EntityManagerFactory emf = Persistence.createEntityManagerFactory("PersistanceUnit");
 	
-	public static EntityManagerFactory getEMF() {
+	public static EntityManagerFactory getNewEMF() {
 		return emf;
 	}
-	public static EntityManager getEM() {
+	public static EntityManager getNewEM() {
 		return emf.createEntityManager();
 	}
 	
@@ -55,7 +55,7 @@ public class Main {
 	public static String CurrentMenuState = "main";
 	
 	// entity manager factory
-	public static EntityManagerFactory emf = StaticEMF.getEMF();
+	public static EntityManagerFactory emf = StaticEMF.getNewEMF();
 	
 
 	
@@ -82,7 +82,7 @@ public class Main {
 			throw new IllegalArgumentException("Invalid operation (must be persist|merge)");
 		}
 		
-		EntityManager em = StaticEMF.getEM();	
+		EntityManager em = StaticEMF.getNewEM();	
 		
 	    em.getTransaction().begin();
 	    if (op.equals("persist")) {
@@ -99,7 +99,7 @@ public class Main {
 	}		
 	
 	public static <T, ID> void saveEntity(T entity, Function<T, ID> idGetter) {
-		EntityManager em = StaticEMF.getEM();	
+		EntityManager em = StaticEMF.getNewEM();	
 		
 	    em.getTransaction().begin();
 	    if ((idGetter == null) || (idGetter.apply(entity) == null)) {
@@ -113,7 +113,7 @@ public class Main {
 	}	
 
 	public static <T> void createEntity(T obj) {
-		EntityManager em = StaticEMF.getEM();
+		EntityManager em = StaticEMF.getNewEM();
 		em.getTransaction().begin();
 		em.persist(obj);
 		em.getTransaction().commit();
@@ -121,7 +121,7 @@ public class Main {
 	}
 	/*
 	public static <T> void updateObject(T obj) {
-		EntityManager em = StaticEMF.getEM();
+		EntityManager em = StaticEMF.getNewEM();
 		em.getTransaction().begin();
 		em.merge(obj);
 		em.getTransaction().commit();
@@ -133,16 +133,16 @@ public class Main {
 	
 	/**
 	 * parametric way to get list of any entity that has a model
-	 * @param <T>
+	 * @param <T>s
 	 * @param entityInstance
 	 * @param clazz
 	 * @return List<T>
 	 */
 	
-	public static <T> List<T> getAnyEntityList(T entityInstance, Class<T> clazz){		
-		EntityManager em = emf.createEntityManager();
+	public static <T> List<T> getAnyEntityList(Class<T> clazz){
+		EntityManager em = StaticEMF.getNewEM();
 		List<T> items = em
-			.createQuery("SELECT a FROM " + entityInstance.getClass().getSimpleName() + " a", clazz)
+			.createQuery("SELECT a FROM " + clazz.getSimpleName() + " a", clazz)
 			.getResultList();
 		em.close();
 		return items;
@@ -153,21 +153,10 @@ public class Main {
 	 * specific way to get list of Ansatt 
 	 */
 	
-	public static List<Ansatt> getAnsattList(){
-		return getAnyEntityList(new Ansatt(), Ansatt.class);
-	}
-	
-	public static List<Prosjekt> getProsjektList(){
-		return getAnyEntityList(new Prosjekt(), Prosjekt.class);
-	}	
-	
-	public static List<Avdeling> getAvdelingList(){
-		return getAnyEntityList(new Avdeling(), Avdeling.class);
-	}
-	
-	public static List<AnsattProsjektPivot> getAnsattProsjektPivotList(){
-		return getAnyEntityList(new AnsattProsjektPivot(), AnsattProsjektPivot.class);		
-	}	
+	public static List<Ansatt> getAnsattList(){	return getAnyEntityList(Ansatt.class);	}	
+	public static List<Prosjekt> getProsjektList(){	return getAnyEntityList(Prosjekt.class); }		
+	public static List<Avdeling> getAvdelingList(){ return getAnyEntityList(Avdeling.class); }	
+	public static List<AnsattProsjektPivot> getAnsattProsjektPivotList(){ return getAnyEntityList(AnsattProsjektPivot.class); }	
 	
 
 	
@@ -190,7 +179,7 @@ public class Main {
 			var e = (AnsattProsjektPivot) entity;
 			return e.getId();
 		}
-		
+
 		throw new IllegalArgumentException("Unknown class");
 	}
 	
@@ -205,21 +194,18 @@ public class Main {
 			System.out.println(entity);
 		}
 	}
-
-	public static void printEntityList(Class<?> classRef, String classRefName) {
-		EntityManager em = emf.createEntityManager();
+	
+	public static <T> void printEntity(T entity) {
+		System.out.println(entity);
+	}
+	
+	public static void printEntityList(Class<?> classRef) {		
+		List<?> items = getAnyEntityList(classRef);
 		
-		List<?> items = em
-			.createQuery("SELECT a FROM " + classRefName + " a", classRef)
-			.getResultList();
+		System.out.println("# Liste over " + classRef.getSimpleName() + "(e/er/ere):");		
+		printEntityListItems(items, classRef);	
 		
-		System.out.println("# Liste over " + classRefName + "(e/er/ere):");		
-		
-		// print faktisk liste
-		printEntityListItems(items, classRef);
 		System.out.println();
-		
-		em.close();
 	}
 	
 	
@@ -228,10 +214,10 @@ public class Main {
 	 * specific methods to print entity lists	
 	 */
 	
-	public static void printAvdelingList() { printEntityList(Avdeling.class, "Avdeling"); }	
-	public static void printAnsattList() { printEntityList(Ansatt.class, "Ansatt"); }		
-	public static void printProsjektList() { printEntityList(Prosjekt.class, "Prosjekt"); }
-	public static void printAnsattProsjektPivotList() {	printEntityList(AnsattProsjektPivot.class, "AnsattProsjektPivot"); }	
+	public static void printAvdelingList() { printEntityList(Avdeling.class); }	
+	public static void printAnsattList() { printEntityList(Ansatt.class); }		
+	public static void printProsjektList() { printEntityList(Prosjekt.class); }
+	public static void printAnsattProsjektPivotList() {	printEntityList(AnsattProsjektPivot.class); }	
 	
 	
 	
@@ -249,6 +235,7 @@ public class Main {
 	}
 	
 	
+	
 	/*
 	 * command methods
 	 */
@@ -256,22 +243,21 @@ public class Main {
 	public static void print_state_menu() {
 		Map<Integer, String> commands = new HashMap<Integer, String>();
 		commands.put(0, "abort");
-		commands.put(1, "resetDatabase");
-		commands.put(2, "finnAnsattById");
-		commands.put(3, "finnAnsattByBrukernavn");
-		commands.put(4, "listAnsatt");
-		commands.put(5, "oppdateringStillingOgLonn");
-		commands.put(6, "leggTilAnsatt");
+		commands.put(1, "finnAnsattById");
+		commands.put(2, "finnAnsattByBrukernavn");
+		commands.put(3, "listAnsatt");
+		commands.put(4, "oppdateringStillingOgLonn");
+		commands.put(5, "leggTilAnsatt");
+		commands.put(6, "resetDatabase");		
 		
-
 		int menuItemIndex = 1;
 		System.out.println("# MENY");
-		System.out.println("\t" + (menuItemIndex++) + ". Reset database");		
 		System.out.println("\t" + (menuItemIndex++) + ". Finn ansatt (id)");
 		System.out.println("\t" + (menuItemIndex++) + ". Finn ansatt (brukernavn)");
 		System.out.println("\t" + (menuItemIndex++) + ". List ansatte");
 		System.out.println("\t" + (menuItemIndex++) + ". Oppdatering stilling og lønn");
 		System.out.println("\t" + (menuItemIndex++) + ". Legg til ansatt");
+		System.out.println("\t" + (menuItemIndex++) + ". Reset database");				
 		System.out.println();
 		System.out.flush();
 		
@@ -283,6 +269,9 @@ public class Main {
 			rootMenu();
 			return;
 		}
+		
+		System.out.println("Du valgte " + cmd);
+		System.out.println();
 		
 		switch(cmd) {
 			case "abort":
@@ -306,12 +295,13 @@ public class Main {
 			case "finnAnsattByBrukernavn":
 			{
 				String needle = TextInput.readLine("Skriv inn ansatt-brukernavn:");					
-				Ansatt item = AnsattDAO.findByBrukernavn(needle);
+				var item = AnsattDAO.findByBrukernavn(needle);
 				printItemFoundMessage(item);
 				break;
 			}
 			
-			case "listAnsatt": {
+			case "listAnsatt": 
+			{
 				printAnsattList();
 				break;
 			}
@@ -326,24 +316,39 @@ public class Main {
 					System.out.println("Resultat funnet: ");
 					String newStilling = TextInput.readLine("Skriv inn ny stilling:");
 					item.setStilling(newStilling);
+					
 					float newLoenn = TextInput.readFloat("Skriv inn ny lønn:");
 					item.setLoennPerMaaned(newLoenn);
-					System.out.println(item);					
+					System.out.println(item);
+					
 					saveEntity(item, Ansatt::getId);
 				}
 				break;
 			}
 			
-			case "leggTilAnsatt": {
+			case "leggTilAnsatt": 
+			{
+				// print notice
+				System.out.println("// ps: vi har satt ansettelsedato til now() i java:");
+				
+				// cache variables
+				LocalDateTime dtNow = LocalDateTime.now();
+				
+				List<Avdeling> avdelingList = getAvdelingList();
+				if (avdelingList.size() == 0) {
+					System.out.println("Ingen avdelinger funnet. Kan ikke legge til ansatt.");
+					break;
+				}
+				
 				// set up new Ansatt object
 				Ansatt newAnsatt = new Ansatt();
 				newAnsatt.setFornavn(TextInput.readLine("Skriv inn fornavn:"));
 				newAnsatt.setEtternavn(TextInput.readLine("Skriv inn etternavn:"));
 				newAnsatt.setBrukernavn(TextInput.readLine("Skriv inn brukernavn:"));
-				newAnsatt.setAnsettelseDato(LocalDateTime.now());
+				newAnsatt.setAnsettelseDato(dtNow);
 				newAnsatt.setStilling(TextInput.readLine("Skriv inn stilling:"));
 				newAnsatt.setLoennPerMaaned(TextInput.readFloat("Skriv inn lønn:"));
-				newAnsatt.setAvdeling(getAvdelingList().get(0));
+				newAnsatt.setAvdeling(avdelingList.getFirst());
 
 				// persist new Ansatt object
 				saveEntity(newAnsatt, Ansatt::getId);
