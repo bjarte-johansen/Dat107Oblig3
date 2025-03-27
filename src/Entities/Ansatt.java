@@ -192,6 +192,6 @@ public class Ansatt {
     	}    	
     	return "Ansatt [\n" + tmp + "]";
     	*/ 
-    	return "Ansatt [id=" + id + ", brukernavn=" + brukernavn + ", fornavn=" + fornavn + ", etternavn=" + etternavn + ", ansettelsedato=" + ansettelsedato + ", stilling=" + stilling + ", loennPerMaaned=" + loennPerMaaned + ", avdeling=" + avdeling + "]";
+    	return "Ansatt [id=" + id + ", brukernavn=" + brukernavn + ", stilling=" + stilling + ", avdeling=" + avdeling + ", fornavn=" + fornavn + ", etternavn=" + etternavn + ", ansettelsedato=" + ansettelsedato + ", loennPerMaaned=" + loennPerMaaned  + "]";
     }
 }

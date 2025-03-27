@@ -40,7 +40,13 @@ public class DemoData {
 		em.createNativeQuery("TRUNCATE TABLE AnsattProsjektPivot, Avdeling, Ansatt, Prosjekt CASCADE").executeUpdate();
 		//em.createNativeQuery("DELETE FROM Avdeling CASCADE").executeUpdate();		
 		//em.createNativeQuery("DELETE FROM Ansatt CASCADE").executeUpdate();
-		//3em.createNativeQuery("DELETE FROM Prosjekt CASCADE").executeUpdate();		
+		//3em.createNativeQuery("DELETE FROM Prosjekt CASCADE").executeUpdate();
+		
+		em.createNativeQuery("ALTER SEQUENCE AnsattProsjektPivot_id_seq RESTART WITH 1;").executeUpdate();
+		em.createNativeQuery("ALTER SEQUENCE Avdeling_id_seq RESTART WITH 1;").executeUpdate();
+		em.createNativeQuery("ALTER SEQUENCE Ansatt_id_seq RESTART WITH 1;").executeUpdate();
+		em.createNativeQuery("ALTER SEQUENCE Prosjekt_id_seq RESTART WITH 1;").executeUpdate();
+		
 		em.getTransaction().commit();
 		em.close();
 		
@@ -53,10 +59,10 @@ public class DemoData {
 	 */
 	
 	public static void createDemoData() {			
-		String fornavn[] = {"Arne", "Kari", "Per", "Ola", "Knut"};
-		String etternavn[] = {"Hansen", "Olsen", "Pettersen", "Nilsen", "Knutson"};
-		String stilling[] = {"Sjef", "Vaskehjelp", "Kokk", "Servitør", "Bartender"};
-		String rolle[] = {"Leder", "Assistent", "Sekretær", "Arbeider", "IT-ansvarlig"};
+		String fornavn[] = {"Arne", "Bjarne", "Cato", "Dolly", "Endre", "Frode", "Gunnar", "Hans", "Ivar", "Jens"};
+		String etternavn[] = {"Arntzen", "Berge", "Chad", "Dimple", "Endrsen", "Foss", "Gundersen", "Hansen", "Iversen", "Jensen"};
+		String stilling[] = {"Sjef", "Vaskehjelp", "Kokk", "Servitør", "Bartender", "Sjef", "Vaskehjelp", "Kokk", "Servitør", "Bartender"};
+		String rolle[] = {"Leder", "Assistent", "Sekretær", "Arbeider", "IT-ansvarlig", "Vaskehjelp", "Kokk", "Servitør", "Bartender", "Sjef"};
 		
 		var em = StaticEMF.getNewEM();
 		
@@ -75,6 +81,10 @@ public class DemoData {
 		avdeling3.setNavn("Radiologi");
 		avdeling3.setLeder(null);
 		Main.saveEntity(avdeling3, Avdeling::getId);
+		
+		Avdeling avdelinger[] = new Avdeling[] {
+			avdeling1, avdeling2, avdeling3
+			};
 				
 		
 		
@@ -82,29 +92,32 @@ public class DemoData {
 		Prosjekt prosjekt1 = new Prosjekt();
 		prosjekt1.setNavn("Kårstø");
 		prosjekt1.setBeskrivelse("Bygging av nytt anlegg");
-		Main.createEntity(prosjekt1);
+		Main.saveEntity(prosjekt1, null);
 		
 		Prosjekt prosjekt2 = new Prosjekt();
 		prosjekt2.setNavn("Mongstad");
 		prosjekt2.setBeskrivelse("Utvikling av eksisterende anlegg");
-		Main.createEntity(prosjekt2);
+		Main.saveEntity(prosjekt2, null);
 		
 
 		// sett inn ansatte
 		for(int i=0; i<fornavn.length; i++) {
 			Ansatt a1 = new Ansatt();
-			a1.setFornavn(fornavn[i]);
-			a1.setEtternavn(etternavn[i]);
-			a1.setBrukernavn(fornavn[i].toLowerCase() + etternavn[i].substring(0,1).toLowerCase());
+			a1.setFornavn(String.valueOf((char)((int) 'a' + i)));
+			a1.setEtternavn(String.valueOf((char)((int) 'a' + i)));
+			a1.setBrukernavn(a1.getFornavn().toLowerCase().charAt(0) + a1.getEtternavn().substring(0,1).toLowerCase());
 			a1.setAnsettelseDato(createRandomDate());
 			a1.setStilling(stilling[i]);
-			a1.setLoennPerMaaned((float) 550_000 + (int) (Math.random() * 300_000));
-			a1.setAvdeling(avdeling1);
-			Main.createEntity(a1);
+			a1.setLoennPerMaaned((float) 1001 + i);
+			a1.setAvdeling(avdelinger[i % avdelinger.length]);
+			Main.saveEntity(a1, null);
 		}
 		
-		avdeling1.setLeder(AnsattDAO.findOne());
-		Main.saveEntity(avdeling1, Avdeling::getId);
+		// sett leder for hver avdeling
+		for (Avdeling avd : avdelinger) {
+			avd.setLeder(AnsattDAO.findByAvdelingId(avd.getId()).get(0));
+			Main.saveEntity(avd, Avdeling::getId);
+		}
 		
 		// sett inn ansatt-prosjekt koblinger
 		List<Ansatt> ansattList = Main.getAnsattList();
@@ -114,7 +127,7 @@ public class DemoData {
 			app.setProsjekt(Math.random() > 0.5 ? prosjekt1 : prosjekt2);
 			app.setAntallTimer((int) (Math.random() * 100));
 			app.setRolle(rolle[i]);
-			Main.createEntity(app);
+			Main.saveEntity(app, null);
 		}
 		
 		//em.flush();

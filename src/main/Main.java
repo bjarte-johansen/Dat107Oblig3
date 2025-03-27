@@ -69,8 +69,6 @@ public class Main {
 	/*
 	 * interface for menu actions
 	 */
-	
-
 
 
 	// menu items
@@ -81,10 +79,6 @@ public class Main {
 	// true if verbose output should be printed
 	public static boolean VERBOSE_COMMANDS = true;
 	
-	// entity manager factory
-	//private static EntityManagerFactory emf = StaticEMF.getNewEMF();
-	
-
 	
 	/*
 	 * print verbose output that can be muted by setting
@@ -102,51 +96,22 @@ public class Main {
 	/*
 	 * method to persist any object
 	 */
-	
-	public static <T, ID> void saveEntity(T entity, String op) {
-		if(op == null || op.length() == 0) {
-			throw new IllegalArgumentException("Invalid operation (must be persist|merge)");
-		}
-		
-		EntityManager em = StaticEMF.getNewEM();	
-		
-	    em.getTransaction().begin();
-	    if (op.equals("persist")) {
-	        em.persist(entity);
-	    } else if (op.equals("merge")){
-	        em.merge(entity);
-	    }else {
-	    	throw  new IllegalArgumentException("Invalid operation c(reate) or u(pdate)");
-	    }
-	    
-	    em.getTransaction().commit();
-	    
-	    em.close();
-	}		
-	
+
 	public static <T, ID> void saveEntity(T entity, Function<T, ID> idGetter) {
 		EntityManager em = StaticEMF.getNewEM();	
-		
 	    em.getTransaction().begin();
+	    
 	    if ((idGetter == null) || (idGetter.apply(entity) == null)) {
 	        em.persist(entity);
 	    } else {
 	        em.merge(entity);
 	    }
-	    em.getTransaction().commit();
 	    
+	    em.getTransaction().commit();	    
 	    em.close();
-	}	
-
-	public static <T> void createEntity(T obj) {
-		EntityManager em = StaticEMF.getNewEM();
-		em.getTransaction().begin();
-		em.persist(obj);
-		em.flush();		
-		em.getTransaction().commit();
-		em.close();
 	}
 
+	
 	
 	/**
 	 * parametric way to get list of any entity that has a model
@@ -436,12 +401,13 @@ public class Main {
 	 */
 		
 	public static void printMenu() {
-		// menu header
+		// print menu header
 		System.out.println("-".repeat(20));
 		System.out.println("   MENY");
 		System.out.println("-".repeat(20));
 		System.out.println();
 
+		// print menu items
 		for (var entry : menuItems.entrySet()) {
 			if (entry.getKey() < 0) {
 				System.out.println("-");
@@ -454,8 +420,11 @@ public class Main {
 		System.out.println();
 		System.out.flush();
 		
+		// select menu item
 		int choice = TextInput.readInt("Tast inn ditt valg:");
 		MenuItem selectedMenuItem = menuItems.get(choice);
+		
+		// execute menu item action
 		if(selectedMenuItem == null) {
 			System.out.println("Ugyldig valg");
 			System.out.println();

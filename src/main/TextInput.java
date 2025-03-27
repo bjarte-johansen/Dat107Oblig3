@@ -13,6 +13,8 @@ public class TextInput {
         System.out.print("Press Enter to continue...");		
 		
         scanner.nextLine();		
+        
+        System.out.print("\n\n\n");
     }
 	
 	
