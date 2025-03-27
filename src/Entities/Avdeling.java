@@ -29,14 +29,27 @@ public class Avdeling {
 
 	private String navn;
 	
-	//@OneToMany(mappedBy = "avdeling", fetch = FetchType.EAGER)
-	//private List<Ansatt> ansatte;
-	
+
 
 	@OneToOne
 	@JoinColumn(name = "lederId")
 	private Ansatt leder;
 
+	@OneToMany(mappedBy = "avdeling", fetch = FetchType.EAGER)
+	public List<Ansatt> ansatte;
+		
+	
+	public List<Ansatt > getAnsatte(){
+		var em = StaticEMF.getNewEM();
+        Avdeling fresh = em.find(Avdeling.class, this.id);
+        fresh.ansatte.size();
+		if (fresh.ansatte.size() != 0) {
+	        System.out.println(fresh.ansatte.get(0));			
+		}else {
+			System.out.println("No ansatte found, WHAT THE FUCK");
+		}
+        return fresh.ansatte;
+	}
 	
 	@Override
 	public int hashCode() {
@@ -61,20 +74,22 @@ public class Avdeling {
 	/**
 	 * @return the ansatte
 	 */
-
+/*
 	public List<Ansatt> getAnsatte() {
 		//return ansatte;
 		return finnAnsatte();
 	}
+*/	
 
 	
 	/**
 	 * @return the ansatte
 	 */
-	
+
 	public List<Ansatt> finnAnsatte(){
 		return AnsattDAO.findByAvdelingId(id);
 	}
+
 
 
 

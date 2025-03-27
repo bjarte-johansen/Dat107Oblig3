@@ -18,6 +18,7 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Persistence;
+import jakarta.persistence.TypedQuery;
 
 
 
@@ -478,6 +479,47 @@ public class Main {
 	public static void main(String[] args) {
 		// handle demo data
 		handleDatabaseDemoData();
+		
+		{
+			Avdeling avd1 = StaticEMF.getNewEM().find(Avdeling.class, 1);
+			
+			var em = StaticEMF.getNewEM();
+			avd1 = em.merge(avd1);
+			
+			System.out.println("using List<>");
+			System.out.println("antall ansatte: " + avd1.ansatte.size());			
+			for(Ansatt ansatt : avd1.ansatte) {
+				System.out.println(ansatt);
+			}
+			System.out.println();
+			
+			System.out.println("using getAnsatte()");
+			System.out.println("antall ansatte: " + avd1.getAnsatte().size());			
+			for(Ansatt ansatt : avd1.ansatte) {
+				System.out.println(ansatt);
+			}
+			System.out.println();
+
+			System.out.println("using JPQL");
+			System.out.println("antall ansatte: " + avd1.finnAnsatte().size());						
+			for(Ansatt ansatt : avd1.finnAnsatte()) {
+				System.out.println(ansatt);
+			}
+			System.out.println();
+			
+
+			System.out.println("using JPQL with LEFT JOIN FETCH");
+			TypedQuery<Avdeling> q = em.createQuery(
+			  "SELECT a FROM Avdeling a LEFT JOIN FETCH a.ansatte WHERE a.id = :id", Avdeling.class);
+			q.setParameter("id", 1);
+			Avdeling a = q.getSingleResult();
+
+			System.out.println("Ansatte: " + a.ansatte.size()); // Should not be empty
+			System.out.println();
+						
+			
+			em.close();
+		}
 		
 		// create menu items
 		Menu.init();
