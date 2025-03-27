@@ -28,6 +28,6 @@ public class AvdelingDAO{
 	}
 
 	public static Avdeling findByLeaderId(int id) {
-		return findOneByColumnEquals("lederId", id);
+		return findOneByColumnEquals("leder.id", id);
 	}
 }

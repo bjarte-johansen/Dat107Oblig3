@@ -105,10 +105,12 @@ public class AnsattProsjektPivot {
 	 * 
 	 */
 	public String toString() {
-		return "AnsattProsjektPivot [id=" + id 
-				+ "\n, ansatt=" + ansatt 
-				+ "\n, prosjekt=" + prosjekt 
+		return "AnsattProsjektPivot [" 
+				+ "\nid=" + id 
+				+ "\n, (" + ansatt + ")"
+				+ "\n, (" + prosjekt + ")"
 				+ "\n, rolle=" + rolle
-				+ "\n, antallTimer=" + antallTimer + "]";
+				+ "\n, antallTimer=" + antallTimer 
+				+ "\n]";
 	}
 }

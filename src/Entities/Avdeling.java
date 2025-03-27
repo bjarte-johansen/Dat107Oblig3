@@ -29,10 +29,8 @@ public class Avdeling {
 
 	private String navn;
 	
-	/*
-	@OneToMany(mappedBy = "avdeling", fetch = FetchType.EAGER)
-	private List<Ansatt> ansatte;
-	*/
+	//@OneToMany(mappedBy = "avdeling", fetch = FetchType.EAGER)
+	//private List<Ansatt> ansatte;
 	
 
 	@OneToOne
@@ -65,6 +63,7 @@ public class Avdeling {
 	 */
 
 	public List<Ansatt> getAnsatte() {
+		//return ansatte;
 		return finnAnsatte();
 	}
 
@@ -76,6 +75,7 @@ public class Avdeling {
 	public List<Ansatt> finnAnsatte(){
 		return AnsattDAO.findByAvdelingId(id);
 	}
+
 
 
 	/**
@@ -125,6 +125,12 @@ public class Avdeling {
 	 * 
 	 */
 	public String toString() {
-		return "Avdeling [id=" + id + " navn=" + navn + ", lederId=" + ((leder != null) ? leder.getId() : "null") + "]";
+		return 
+			"Avdeling ["
+			+ "id=" + id
+			+ ", navn=" + navn
+			+ ", lederId=" + ((leder != null) ? leder.getId() : "null")
+			+ ", leder=" + leder.getFullName() 
+			+ "]";
 	}
 }

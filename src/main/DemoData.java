@@ -11,6 +11,27 @@ import Entities.Avdeling;
 import Entities.Prosjekt;
 
 public class DemoData {
+	
+	// true if verbose output should be printed
+	public static boolean VERBOSE_COMMANDS = true;
+	
+	
+	/*
+	 * print verbose output that can be muted by setting
+	 * VERBOSE_COMMANDS to false
+	 */
+	
+	public static void printVerbose(String message) {
+        if(VERBOSE_COMMANDS) {
+            System.out.println(message);
+        }
+    }
+	
+	
+	/*
+	 * method to create a random date between 2000 and 2025
+     */
+
 	public static LocalDateTime createRandomDate() {
 		LocalDateTime start = LocalDateTime.of(2000, 1, 1, 0, 0);
 		LocalDateTime end = LocalDateTime.of(2025, 12, 31, 23, 59);
@@ -50,7 +71,7 @@ public class DemoData {
 		em.getTransaction().commit();
 		em.close();
 		
-		Main.printVerbose("-- Old database data cleared");
+		printVerbose("-- Old database data cleared");
 	}
 	
 	
@@ -70,18 +91,19 @@ public class DemoData {
 		Avdeling avdeling1 = new Avdeling();
 		avdeling1.setNavn("Odontologi");
 		avdeling1.setLeder(null);
-		Main.saveEntity(avdeling1, Avdeling::getId);
+		DatabaseDAO.saveEntity(avdeling1, Avdeling::getId);
 		
 		Avdeling avdeling2 = new Avdeling();
 		avdeling2.setNavn("Pediatri");
 		avdeling2.setLeder(null);
-		Main.saveEntity(avdeling2, Avdeling::getId);
+		DatabaseDAO.saveEntity(avdeling2, Avdeling::getId);
 		
 		Avdeling avdeling3 = new Avdeling();
 		avdeling3.setNavn("Radiologi");
 		avdeling3.setLeder(null);
-		Main.saveEntity(avdeling3, Avdeling::getId);
+		DatabaseDAO.saveEntity(avdeling3, Avdeling::getId);
 		
+		// setup avdelinger array to use for setting leder for each avdeling
 		Avdeling avdelinger[] = new Avdeling[] {
 			avdeling1, avdeling2, avdeling3
 			};
@@ -92,12 +114,12 @@ public class DemoData {
 		Prosjekt prosjekt1 = new Prosjekt();
 		prosjekt1.setNavn("Kårstø");
 		prosjekt1.setBeskrivelse("Bygging av nytt anlegg");
-		Main.saveEntity(prosjekt1, null);
+		DatabaseDAO.saveEntity(prosjekt1, null);
 		
 		Prosjekt prosjekt2 = new Prosjekt();
 		prosjekt2.setNavn("Mongstad");
 		prosjekt2.setBeskrivelse("Utvikling av eksisterende anlegg");
-		Main.saveEntity(prosjekt2, null);
+		DatabaseDAO.saveEntity(prosjekt2, null);
 		
 
 		// sett inn ansatte
@@ -110,29 +132,29 @@ public class DemoData {
 			a1.setStilling(stilling[i]);
 			a1.setLoennPerMaaned((float) 1001 + i);
 			a1.setAvdeling(avdelinger[i % avdelinger.length]);
-			Main.saveEntity(a1, null);
+			DatabaseDAO.saveEntity(a1, null);
 		}
 		
 		// sett leder for hver avdeling
 		for (Avdeling avd : avdelinger) {
 			avd.setLeder(AnsattDAO.findByAvdelingId(avd.getId()).get(0));
-			Main.saveEntity(avd, Avdeling::getId);
+			DatabaseDAO.saveEntity(avd, Avdeling::getId);
 		}
 		
 		// sett inn ansatt-prosjekt koblinger
-		List<Ansatt> ansattList = Main.getAnsattList();
+		List<Ansatt> ansattList = DatabaseDAO.getAnsattList();
 		for (int i = 0; i < ansattList.size(); i++) {
 			AnsattProsjektPivot app = new AnsattProsjektPivot();
 			app.setAnsatt(ansattList.get(i));
 			app.setProsjekt(Math.random() > 0.5 ? prosjekt1 : prosjekt2);
-			app.setAntallTimer((int) (Math.random() * 100));
+			app.setAntallTimer((int) (Math.random() * 10));
 			app.setRolle(rolle[i]);
-			Main.saveEntity(app, null);
+			DatabaseDAO.saveEntity(app, null);
 		}
 		
 		//em.flush();
 		em.close();
 		
-		Main.printVerbose("-- New demo data inserted");
+		printVerbose("-- New demo data inserted");
 	}
 }

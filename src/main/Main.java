@@ -20,79 +20,12 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Persistence;
 
 
-/*
- * menu item class
- */
-
-@FunctionalInterface
-interface MenuAction{
-	void execute();
-};
-
-
-class MenuItem{
-	private int key;
-	private String text;
-    private MenuAction action;
-    
-    public MenuItem(int key, String text, MenuAction action) {
-    	this.key = key;
-        this.text = text;
-        this.action = action;
-    }
-    
-    public void execute() {
-        action.execute();
-    }
-    
-	public String getText() {
-		return text;
-	}
-	public int getKey() {
-		return key;
-	}
-    
-    public String toString() {
-        return String.format("%d. ", key) + text;
-    }
-};
 
 
 
 
-/*
- * main class
- */
+class DatabaseDAO{
 
-
-public class Main {
-	/*
-	 * interface for menu actions
-	 */
-
-
-	// menu items
-	private static Map<Integer, MenuItem> menuItems = new LinkedHashMap<>();
-	private static int menuItemInvalidIndex = -1;
-	
-	
-	// true if verbose output should be printed
-	public static boolean VERBOSE_COMMANDS = true;
-	
-	
-	/*
-	 * print verbose output that can be muted by setting
-	 * VERBOSE_COMMANDS to false
-	 */
-	
-	public static void printVerbose(String message) {
-        if(VERBOSE_COMMANDS) {
-            System.out.println(message);
-        }
-    }
-
-
-	
 	/*
 	 * method to persist any object
 	 */
@@ -124,7 +57,7 @@ public class Main {
 	public static <T> List<T> getAnyEntityList(Class<T> clazz){
 		EntityManager em = StaticEMF.getNewEM();
 		List<T> items = em
-			.createQuery("SELECT a FROM " + clazz.getSimpleName() + " a", clazz)
+			.createQuery("SELECT o FROM " + clazz.getSimpleName() + " o", clazz)
 			.getResultList();
 		em.close();
 		return items;
@@ -141,31 +74,23 @@ public class Main {
 	public static List<AnsattProsjektPivot> getAnsattProsjektPivotList(){ return getAnyEntityList(AnsattProsjektPivot.class); }	
 	
 
-	
 	/*
-	 * generic methods to print entity lists
-	 */
-	
 	public static <T> Integer getEntityId(T entity, Class<?> clazz) {
 		// get id from entity-object if they are of certain classes
 		if(clazz == Ansatt.class){
-			var e = ((Ansatt) entity);
-			return e.getId();
+			return ((Ansatt) entity).getId();
 		}else if (clazz == Avdeling.class) {
-			var e = (Avdeling) entity;
-			return e.getId();
+			return ((Avdeling) entity).getId();
 		}else if (clazz == Prosjekt.class) {
-			var e = (Prosjekt) entity;
-			return e.getId();
+			return ((Prosjekt) entity).getId();
 		}else if (clazz == AnsattProsjektPivot.class) {
-			var e = (AnsattProsjektPivot) entity;
-			return e.getId();
+			return ((AnsattProsjektPivot) entity).getId();
 		}
 
 		throw new IllegalArgumentException("Unknown class");
 	}
 	
-	public static <T1> void printEntityListItems(List<T1> entities, Class<?> clazz) {
+	public static <T1> void printEntityListItemsWithId(List<T1> entities, Class<?> clazz) {
 		String prefix = "<";
 		String postfix = ">";
 		
@@ -176,12 +101,24 @@ public class Main {
 			System.out.println(entity);
 		}
 	}
+	*/
+
 	
-	public static void printEntityList(Class<?> classRef) {				
-		System.out.println("# Liste over " + classRef.getSimpleName() + "(e/er/ere):");
+	/*
+	 * generic methods to print entity lists
+	 */
+	
+	public static <T1> void printEntityListItems(List<T1> entities) {		
+		for (T1 entity : entities) {
+			System.out.println(entity);
+		}
+	}	
+	
+	public static void printEntityList(Class<?> clazz) {				
+		System.out.println("# Liste over " + clazz.getSimpleName().toLowerCase() + "(e/er/ere):");
 		
-		List<?> items = getAnyEntityList(classRef);		
-		printEntityListItems(items, classRef);	
+		List<?> items = getAnyEntityList(clazz);		
+		printEntityListItems(items);	
 		
 		System.out.println();
 	}
@@ -197,8 +134,15 @@ public class Main {
 	public static void printProsjektList() { printEntityList(Prosjekt.class); }
 	public static void printAnsattProsjektPivotList() {	printEntityList(AnsattProsjektPivot.class); }	
 	
-	
-	
+}
+
+
+/*
+ * main class
+ */
+
+
+public class Main {	
 	/*
 	 * print item found message
 	 */
@@ -230,7 +174,7 @@ public class Main {
 	
 	
 	public static void action_employee_list() { 
-		printAnsattList(); 
+		DatabaseDAO.printAnsattList(); 
 	}
 	
 	public static void action_employee_find_by_id(){
@@ -241,25 +185,25 @@ public class Main {
 	
 	public static void action_employee_find_by_username(){
 		String needle = TextInput.readLine("Skriv inn ansatt-brukernavn:");					
-		var item = AnsattDAO.findByBrukernavn(needle);
-		printItemFoundMessage(item);
+		var emp = AnsattDAO.findByBrukernavn(needle);
+		printItemFoundMessage(emp);
 	}	
 
 	public static void action_set_position_and_salary(){
 		int needle = TextInput.readInt("Skriv inn ansatt-id:");				
-		var item = AnsattDAO.findById(needle);
-		if(item == null) {
+		var emp = AnsattDAO.findById(needle);
+		if(emp == null) {
             System.out.println("Ingen resultat funnet");
 		}else {
 			System.out.println("Resultat funnet: ");
 			String newStilling = TextInput.readLine("Skriv inn ny stilling:");
-			item.setStilling(newStilling);
+			emp.setStilling(newStilling);
 			
 			float newLoenn = TextInput.readFloat("Skriv inn ny lønn:");
-			item.setLoennPerMaaned(newLoenn);
-			System.out.println(item);
+			emp.setLoennPerMaaned(newLoenn);
+			System.out.println(emp);
 			
-			saveEntity(item, Ansatt::getId);
+			DatabaseDAO.saveEntity(emp, Ansatt::getId);
 		}
 	}
 	
@@ -269,28 +213,28 @@ public class Main {
 		
 		// cache variables
 		LocalDateTime nowDateTime = LocalDateTime.now();
-		
-		List<Avdeling> avdelingList = getAvdelingList();
-		if (avdelingList.size() == 0) {
+
+		List<Avdeling> departmentList = DatabaseDAO.getAvdelingList();
+		if (departmentList.size() == 0) {
 			throw new RuntimeException("Ingen avdelinger funnet. Kan ikke legge til ansatt.");
 		}
 		
 		// set up new Ansatt object
-		Ansatt newAnsatt = new Ansatt();
-		newAnsatt.setFornavn(TextInput.readLine("Skriv inn fornavn:"));
-		newAnsatt.setEtternavn(TextInput.readLine("Skriv inn etternavn:"));
-		newAnsatt.setBrukernavn(TextInput.readLine("Skriv inn brukernavn:"));
-		newAnsatt.setAnsettelseDato(nowDateTime);
-		newAnsatt.setStilling(TextInput.readLine("Skriv inn stilling:"));
-		newAnsatt.setLoennPerMaaned(TextInput.readFloat("Skriv inn lønn:"));
+		Ansatt newEmp = new Ansatt();
+		newEmp.setFornavn(TextInput.readLine("Skriv inn fornavn:"));
+		newEmp.setEtternavn(TextInput.readLine("Skriv inn etternavn:"));
+		newEmp.setBrukernavn(TextInput.readLine("Skriv inn brukernavn:"));
+		newEmp.setAnsettelseDato(nowDateTime);
+		newEmp.setStilling(TextInput.readLine("Skriv inn stilling:"));
+		newEmp.setLoennPerMaaned(TextInput.readFloat("Skriv inn lønn:"));
 		
 		// select avdeling untill suitable is found
 		while(true) {
-			printAvdelingList();
+			DatabaseDAO.printAvdelingList();
 			int avdelingId = TextInput.readInt("Velg en avdeling (id):");
 			Avdeling avdeling = AvdelingDAO.findById(avdelingId);
 			if (avdeling != null) {
-				newAnsatt.setAvdeling(avdeling);						
+				newEmp.setAvdeling(avdeling);						
 				break;
 			}
 			
@@ -298,28 +242,28 @@ public class Main {
 		}
 		
 		// persist new Ansatt object
-		saveEntity(newAnsatt, Ansatt::getId);
+		DatabaseDAO.saveEntity(newEmp, Ansatt::getId);
 	}
 
 	public static void action_employee_find_by_department()	{			
 		int needle = TextInput.readInt("Skriv inn avdeling-id:");
-		var item = AvdelingDAO.findById(needle);
+		var dept = AvdelingDAO.findById(needle);
 		
-		if (item == null) {
+		if (dept == null) {
 			System.out.println("Ingen resultat funnet");
 		} else {
 			System.out.println("Resultat funnet: ");
-			System.out.println(item);
+			System.out.println(dept);
 			
-			List<Ansatt> ansatte = item.getAnsatte();
-			System.out.println("Ansatte: (" + ansatte.size() + ")");
-			for (Ansatt ansatt : ansatte) {
-				if(ansatt.equals(item.getLeder())) {
+			List<Ansatt> emps = dept.getAnsatte();
+			System.out.println("Ansatte: (" + emps.size() + ")");
+			for (Ansatt emp : emps) {
+				if(emp.equals(dept.getLeder())) {
 					System.out.print("[Leder ");
-					System.out.print(ansatt);
+					System.out.print(emp);
 					System.out.println("]");
 				}else {
-					System.out.println(ansatt);
+					System.out.println(emp);
 				}
 			}
 		}
@@ -334,7 +278,7 @@ public class Main {
 		}				
 		
 		// find avdeling
-		printAvdelingList();
+		DatabaseDAO.printAvdelingList();
 		int avdelingId = TextInput.readInt("Skriv inn avdeling-id:");				
 		Avdeling avdeling = AvdelingDAO.findById(avdelingId);
 		if (avdeling == null) {
@@ -346,7 +290,10 @@ public class Main {
 		}
 		
 		ansatt.setAvdeling(avdeling);
-		saveEntity(ansatt, Ansatt::getId);		
+		DatabaseDAO.saveEntity(ansatt, Ansatt::getId);
+		
+		avdeling.setLeder(ansatt);
+		DatabaseDAO.saveEntity(avdeling, Avdeling::getId);
 	}
 	
 	
@@ -361,10 +308,10 @@ public class Main {
 		avdeling.setNavn(TextInput.readLine("Skriv inn avdelingens navn:"));
 		
 		// print ansatte
-		printAnsattList();
+		DatabaseDAO.printAnsattList();
 		
 		// read input and find ansatt
-		int leaderId = TextInput.readInt("Skriv inn leder-ansatt-id:");
+		int leaderId = TextInput.readInt("Skriv inn ansatt-id for avdelingsleder:");
 		Ansatt newLeader = AnsattDAO.findById(leaderId);
 		if(newLeader == null) {
 			throw new RuntimeException("Ingen leder med id funnet");
@@ -376,11 +323,11 @@ public class Main {
 	
 		// set ansatt's avdeling
 		avdeling.setLeder(newLeader);
-		saveEntity(avdeling, Avdeling::getId);
+		DatabaseDAO.saveEntity(avdeling, Avdeling::getId);
 		
 		// update ansatt avdeling
 		newLeader.setAvdeling(avdeling);
-		saveEntity(newLeader, Ansatt::getId);
+		DatabaseDAO.saveEntity(newLeader, Ansatt::getId);
 	}
 
 	public static void action_department_find_by_id(){
@@ -390,15 +337,45 @@ public class Main {
 	}	
 	
 	public static void action_department_list() {
-		printAvdelingList();
+		DatabaseDAO.printAvdelingList();
 	}	
 	
 	
 	// project actions
 	
 	public static void action_project_list() {
-		printProsjektList();
+		DatabaseDAO.printProsjektList();
 	}
+	
+	public static void action_project_list_details() {
+		int needle = TextInput.readInt("Skriv inn prosjekt-id:");
+		var item = ProsjektDAO.findById(needle);
+		if (item == null) {
+			throw new RuntimeException("Ingen prosjekt funnet med id " + needle);
+		}
+		
+		System.out.println("# Detaljer for prosjekt:");		
+		System.out.println(item);
+		System.out.println();		
+		
+		int totalHours = 0;
+		var deltagere = item.getDeltagere();			
+		System.out.println("Deltakere:");
+		
+		if(deltagere.size() == 0) {
+			System.out.println("0 funnet");
+		}
+		
+		for (AnsattProsjektPivot ppi : deltagere) {
+			System.out.println(ppi);
+			totalHours += ppi.getAntallTimer();
+		}
+		System.out.println();
+		
+		System.out.println("Total antall timer:");
+		System.out.println(totalHours);
+		System.out.println();
+	}	
 	
 	public static void action_project_find_by_id() {
 		int needle = TextInput.readInt("Skriv inn prosjekt-id:");
@@ -406,86 +383,82 @@ public class Main {
 		printItemFoundMessage(item);
 	}	
 	
+	public static void action_project_add() {
+		Prosjekt prosjekt = new Prosjekt();
+		prosjekt.setNavn(TextInput.readLine("Skriv inn prosjektets navn:"));
+		prosjekt.setBeskrivelse(TextInput.readLine("Skriv inn prosjektets beskrivelse:"));
+		DatabaseDAO.saveEntity(prosjekt, Prosjekt::getId);
+	}
 	
-	
-	/*
-	 * menu methods
-	 */
+	public static void action_project_add_participant_by_project_id() {
+		// find project
+		int needle = TextInput.readInt("Skriv inn prosjekt-id:");
+		var project = ProsjektDAO.findById(needle);
+		if(project == null) {
+			throw new RuntimeException("Ingen prosjekt funnet med id " + needle);
+		}
 		
-	public static void printMenu() {
-		// print menu header
-		System.out.println("-".repeat(20));
-		System.out.println("   MENY");
-		System.out.println("-".repeat(20));
-		System.out.println();
+		// find ansatt
+		DatabaseDAO.printAnsattList();
+		int ansattId = TextInput.readInt("Skriv inn ansatt-id:");
+		var ansatt = AnsattDAO.findById(ansattId);
+		if (ansatt == null) {
+			throw new RuntimeException("Ingen ansatt funnet med id " + ansattId);
+		}
+		
+		System.out.println("Legger inn hardkodede verdier for timer og rolle");
+		AnsattProsjektPivot ppi = new AnsattProsjektPivot();
+		ppi.setAnsatt(ansatt);
+		ppi.setProsjekt(project);
+		ppi.setAntallTimer(10);
+		ppi.setRolle("Software Developer");
+		DatabaseDAO.saveEntity(ppi, AnsattProsjektPivot::getId);
+		
+		System.out.println("Ansatt lagt til i prosjekt");
+		System.out.println(ppi);
+	}
+	
+	public static void action_project_add_participant_hours_by_project_id() {
+		// find project
+		int needle = TextInput.readInt("Skriv inn prosjekt-id:");
+		var project = ProsjektDAO.findById(needle);
+		if (project == null) {
+			throw new RuntimeException("Ingen prosjekt funnet med id " + needle);
+		}
 
-		// print menu items
-		for (var entry : menuItems.entrySet()) {
-			if (entry.getKey() < 0) {
-				System.out.println("-");
-			} else {
-				System.out.println(entry.getValue().toString());
-			}
+		// find ansatt
+		DatabaseDAO.printAnsattList();
+		int ansattId = TextInput.readInt("Skriv inn ansatt-id:");
+		var ansatt = AnsattDAO.findById(ansattId);
+		if (ansatt == null) {
+			throw new RuntimeException("Ingen ansatt funnet med id " + ansattId);
 		}
-				
-		// print empty line and flush
-		System.out.println();
-		System.out.flush();
-		
-		// select menu item
-		int choice = TextInput.readInt("Tast inn ditt valg:");
-		MenuItem selectedMenuItem = menuItems.get(choice);
-		
-		// execute menu item action
-		if(selectedMenuItem == null) {
-			System.out.println("Ugyldig valg");
-			System.out.println();
-		}else {
-			try {
-				selectedMenuItem.execute();
-			}catch(Exception e) {
-				System.out.println(e.getMessage());
-			}
-			System.out.println();			
+
+		// find pivot
+		AnsattProsjektPivot ppi = AnsattProsjektPivotDAO.findOneByAnsattIdAndProjectId(ansattId, needle);
+		if (ppi == null) {
+			throw new RuntimeException("Ingen pivot funnet for ansatt " + ansattId + " og prosjekt " + needle);
 		}
-		
-		// wait untill user presses enter
-		TextInput.waitUntillInput();
-		
-		printMenu();
+
+		// set hours
+		int hours = TextInput.readInt("Legg til antall timer:");
+		if(ppi.getAntallTimer() == null) {
+            ppi.setAntallTimer(0);
+		}
+		ppi.setAntallTimer(ppi.getAntallTimer() + hours);
+		DatabaseDAO.saveEntity(ppi, AnsattProsjektPivot::getId);
+
+		System.out.println("Timer lagt til for ansatt i prosjekt");
+		System.out.println(ppi);
 	}
 	
-	public static void addMenuItem(int index, String text, MenuAction action) {				
-		if(index < 0) {
-			menuItems.put(menuItemInvalidIndex--, new MenuItem(index >= 0 ? index : -1, text, action));
-		}else {		
-			menuItems.put(index, new MenuItem(index, text, action));
-		}
-	}
-	
-	public static void createMenu() {
-		// items
-		addMenuItem(1, "Ansatt, list", Main::action_employee_list);	
-		addMenuItem(2, "Ansatt, finn etter id", Main::action_employee_find_by_id);	
-		addMenuItem(3, "Ansatt, finn etter brukernavn", Main::action_employee_find_by_username);
-		addMenuItem(4, "Ansatt, endre stilling og lønn", Main::action_set_position_and_salary);
-		addMenuItem(5, "Ansatt, legg til", Main::action_employee_add);
-		addMenuItem(6, "Ansatt, finn etter avdeling", Main::action_employee_find_by_department);		
-		addMenuItem(7, "Ansatt, endre avdeling", Main::action_employee_update_department);			
-		addMenuItem(-1, null, null);
-		addMenuItem(8, "Avdeling, list", Main::action_department_list);
-		addMenuItem(9, "Avdeling, finn etter id", Main::action_department_find_by_id);		
-		addMenuItem(10, "Avdeling, legg til", Main::action_department_add);		
-		addMenuItem(-1, null, null);
-		addMenuItem(11, "Prosjekt, list", Main::action_project_list);
-		addMenuItem(12, "Prosjekt, finn etter id", Main::action_project_find_by_id);
-	}
+
 	
 	/*
 	 * main method
 	 */	
-
-	public static void main(String[] args) {
+	
+	public static void handleDatabaseDemoData() {
 		// handle database reseting		
 		boolean allwaysResetDatabase = true;
 		boolean showResetDatabaseOption = true;
@@ -500,12 +473,17 @@ public class Main {
             DemoData.createDemoData();
             System.out.println();
 		}
+	}
+
+	public static void main(String[] args) {
+		// handle demo data
+		handleDatabaseDemoData();
 		
-		// create menu
-		createMenu();
+		// create menu items
+		Menu.init();
 		
 		// print menu
-		printMenu();
+		Menu.print();
 
 		// close entity manager factory
 		StaticEMF.close();

@@ -27,6 +27,21 @@ public class ProsjektDAO {
 	    }
 	}
 	
+	public static <T> List<?> findByColumnEquals(String key, T value, Class<?> clazz) {
+		var em = StaticEMF.getNewEM(); 
+	    try {
+	    	var items = em.createQuery(
+	            "SELECT o FROM Prosjekt o WHERE o." + key + " = :value", clazz)
+	            .setParameter("value", value)
+	            .getResultList();
+	        em.close();
+	        return items;
+	    } catch (NoResultException e) {
+	    	em.close();
+	        return null;
+	    }
+	}	
+	
 	
 	public static Prosjekt findById(int id) {
 		return findOneByColumnEquals("id", id);

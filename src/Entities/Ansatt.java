@@ -15,6 +15,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import main.EntityFormatter;
 
 @Entity
 public class Ansatt {
@@ -32,8 +33,39 @@ public class Ansatt {
 	
 	@ManyToOne
 	@JoinColumn(name = "avdelingId")
-	private Avdeling avdeling;	
+	private Avdeling avdeling;
 	
+	@OneToOne(mappedBy = "leder")
+	private Avdeling leder;
+	
+	/**
+	 * @return the ansettelsedato
+	 */
+	public LocalDateTime getAnsettelsedato() {
+		return ansettelsedato;
+	}
+
+	/**
+	 * @param ansettelsedato the ansettelsedato to set
+	 */
+	public void setAnsettelsedato(LocalDateTime ansettelsedato) {
+		this.ansettelsedato = ansettelsedato;
+	}
+
+	/**
+	 * @return the leder
+	 */
+	public Avdeling getLeder() {
+		return leder;
+	}
+
+	/**
+	 * @param leder the leder to set
+	 */
+	public void setLeder(Avdeling leder) {
+		this.leder = leder;
+	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(id);
@@ -82,6 +114,10 @@ public class Ansatt {
 		this.brukernavn = brukernavn;
 	}
 
+	public String getFullName() {
+		return getEtternavn() + ", " + getFornavn();
+	}
+	
 	/**
 	 * @return the fornavn
 	 */
@@ -169,29 +205,29 @@ public class Ansatt {
 	/**
 	 * @return descriptive string
 	 */
-	
-	public static <T> String formatField(String key, T value) {
-	    return key + ": " + value;
-	}
-	
+
+	@Override
     public String toString() {
-    	/*
-    	int n = 8;
-    	List<String> fields = new ArrayList<String>();
-    	fields.add(formatField("id", id));
-    	fields.add(formatField("brukernavn", brukernavn));
-    	fields.add(formatField("fornavn", fornavn));
-    	fields.add(formatField("etternavn", etternavn));
-    	fields.add(formatField("ansettelsedato", ansettelsedato));
-    	fields.add(formatField("stilling", stilling));
-    	fields.add(formatField("loennPerMaaned", loennPerMaaned));
-    	fields.add(formatField("avdeling", avdeling));
-    	String tmp = "";
-    	for (int i = 0; i < n; i++) {
-    		tmp += fields.get(i) + ", ";
-    	}    	
-    	return "Ansatt [\n" + tmp + "]";
-    	*/ 
-    	return "Ansatt [id=" + id + ", brukernavn=" + brukernavn + ", stilling=" + stilling + ", avdeling=" + avdeling + ", fornavn=" + fornavn + ", etternavn=" + etternavn + ", ansettelsedato=" + ansettelsedato + ", loennPerMaaned=" + loennPerMaaned  + "]";
+		/*
+		String props[] = new String[] { 
+			"id", "" + id,
+			"navn, etternavn, bruker", getFornavn() + ", " + getEtternavn() + ", " + brukernavn,
+			//"brukernavn", brukernavn,
+			//"fornavn", fornavn, 
+			//"etternavn", etternavn,
+			"stilling, avdeling", stilling + ", " + "" + avdeling, 
+			"erLeder", ((avdeling != null) && avdeling.getLeder().equals(this)) ? "Ja" : "Nei",			
+			//"stilling", stilling, 			
+			"ansattelseDato", "" + ansettelsedato,
+			"lonnPerMaaned", "" + loennPerMaaned
+			};		
+	    return EntityFormatter.formatEntity("Ansatt", props);
+		*/	    
+    	
+    	// simplified output
+		String tmpStilling = (stilling != null) ? stilling : "ukjent stilling";
+		return "Ansatt [id=" + id + ", \"" + getEtternavn() + ", " + getFornavn() + "\" (u:" + brukernavn + "), " + tmpStilling + " v/" + avdeling.getNavn() + ", ansatt=" + ansettelsedato.toLocalDate() + ", lønn=" + loennPerMaaned  + "/month]";
+    	//return "Ansatt [id=" + id + ", navn=" + getEtternavn() + ", " + getFornavn() + " (" + brukernavn + "), stilling=" + stilling + ", avdeling=" + avdeling.getNavn() + ", ansettelsedato=" + ansettelsedato.toLocalDate() + ", loennPerMaaned=" + loennPerMaaned  + "]";    	
+    	//return "Ansatt [id=" + id + ", brukernavn=" + brukernavn + ", stilling=" + stilling + ", avdeling=" + avdeling + ", fornavn=" + fornavn + ", etternavn=" + etternavn + ", ansettelsedato=" + ansettelsedato + ", loennPerMaaned=" + loennPerMaaned  + "]";
     }
 }
