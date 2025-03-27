@@ -135,7 +135,7 @@ public class Main {
 	 * specific way to get list of Ansatt 
 	 */
 	
-	public static List<Ansatt> getAnsattList(){	return getAnyEntityList(Ansatt.class);	}	
+	public static List<Ansatt> getAnsattList(){	return getAnyEntityList(Ansatt.class); }	
 	public static List<Prosjekt> getProsjektList(){	return getAnyEntityList(Prosjekt.class); }		
 	public static List<Avdeling> getAvdelingList(){ return getAnyEntityList(Avdeling.class); }	
 	public static List<AnsattProsjektPivot> getAnsattProsjektPivotList(){ return getAnyEntityList(AnsattProsjektPivot.class); }	
@@ -166,13 +166,13 @@ public class Main {
 	}
 	
 	public static <T1> void printEntityListItems(List<T1> entities, Class<?> clazz) {
-		String prefix = "(id ";
-		String postfix = ")";
+		String prefix = "<";
+		String postfix = ">";
 		
 		for (T1 entity : entities) {
 			Integer entityId = getEntityId(entity, clazz);
 			System.out.print((entityId != null) ? (prefix + entityId + postfix) : "unknown");
-			System.out.print(" : ");
+			System.out.print(": ");
 			System.out.println(entity);
 		}
 	}
@@ -211,6 +211,16 @@ public class Main {
 			System.out.println(item);
 		}
 	}
+	
+	
+	/*
+	 * is department leader
+	 */
+
+	protected static boolean is_depertment_leader(int employee_id) {
+		Avdeling department = AvdelingDAO.findByLeaderId(employee_id);
+		return department != null;
+	}	
 	
 	
 	
@@ -262,8 +272,7 @@ public class Main {
 		
 		List<Avdeling> avdelingList = getAvdelingList();
 		if (avdelingList.size() == 0) {
-			System.out.println("Ingen avdelinger funnet. Kan ikke legge til ansatt.");
-			return;
+			throw new RuntimeException("Ingen avdelinger funnet. Kan ikke legge til ansatt.");
 		}
 		
 		// set up new Ansatt object
@@ -287,7 +296,6 @@ public class Main {
 			
 			System.out.println("Ingen avdeling funnet med id " + avdelingId);
 		}
-		
 		
 		// persist new Ansatt object
 		saveEntity(newAnsatt, Ansatt::getId);
@@ -314,9 +322,6 @@ public class Main {
 					System.out.println(ansatt);
 				}
 			}
-			
-			System.out.println("Leder (sjef):");
-			System.out.println(item.getLeder());
 		}
 	}
 	
@@ -325,8 +330,7 @@ public class Main {
 		int ansattId = TextInput.readInt("Skriv inn ansatt-id:");
 		Ansatt ansatt = AnsattDAO.findById(ansattId);
 		if (ansatt == null) {
-			System.out.println("Ingen ansatt funnet med id " + ansattId);
-			return;
+			throw new RuntimeException("Ingen ansatt funnet med id " + ansattId);
 		}				
 		
 		// find avdeling
@@ -334,16 +338,21 @@ public class Main {
 		int avdelingId = TextInput.readInt("Skriv inn avdeling-id:");				
 		Avdeling avdeling = AvdelingDAO.findById(avdelingId);
 		if (avdeling == null) {
-			System.out.println("Ingen avdeling funnet med id " + avdelingId);
-			return;
+			throw new RuntimeException("Ingen avdeling funnet med id " + avdelingId);
+		}
+		
+		if(is_depertment_leader(ansatt.getId())) {
+            throw new RuntimeException("Kan ikke endre avdeling for en leder");
 		}
 		
 		ansatt.setAvdeling(avdeling);
-		saveEntity(ansatt, Ansatt::getId);
+		saveEntity(ansatt, Ansatt::getId);		
 	}
 	
+	
+	
 	// department actions
-
+	
 	public static void action_department_add() {
 		// opprett object
 		Avdeling avdeling = new Avdeling();
@@ -358,9 +367,12 @@ public class Main {
 		int leaderId = TextInput.readInt("Skriv inn leder-ansatt-id:");
 		Ansatt newLeader = AnsattDAO.findById(leaderId);
 		if(newLeader == null) {
-			System.out.println("Ingen leder med id funnet");
-			return;
+			throw new RuntimeException("Ingen leder med id funnet");
 		}
+		
+		if(is_depertment_leader(newLeader.getId())) {
+			throw new RuntimeException("Kan ikke endre avdeling for en leder");
+		}		
 	
 		// set ansatt's avdeling
 		avdeling.setLeder(newLeader);
@@ -432,6 +444,7 @@ public class Main {
 			try {
 				selectedMenuItem.execute();
 			}catch(Exception e) {
+				System.out.println(e.getMessage());
 			}
 			System.out.println();			
 		}
