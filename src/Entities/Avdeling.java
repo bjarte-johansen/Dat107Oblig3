@@ -1,5 +1,6 @@
 package Entities;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -15,6 +16,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import jakarta.persistence.TypedQuery;
 import main.AnsattDAO;
 import main.StaticEMF;
 
@@ -36,19 +38,21 @@ public class Avdeling {
 	private Ansatt leder;
 
 	@OneToMany(mappedBy = "avdeling", fetch = FetchType.EAGER)
-	public List<Ansatt> ansatte;
+	public List<Ansatt> ansatte = new ArrayList<>();
+	/*
+	public static Avdeling findAvdelingById(Integer id) {
+        var em = StaticEMF.getNewEM();
+        TypedQuery<Avdeling> query = em.createQuery(
+        	    "SELECT a FROM Avdeling a LEFT JOIN FETCH a.ansatte WHERE a.id = :id", Avdeling.class);
+    	query.setParameter("id", 1L);
+    	Avdeling avdeling = query.getSingleResult();
+    	return avdeling;
+    }
+    */
 		
 	
 	public List<Ansatt > getAnsatte(){
-		var em = StaticEMF.getNewEM();
-        Avdeling fresh = em.find(Avdeling.class, this.id);
-        fresh.ansatte.size();
-		if (fresh.ansatte.size() != 0) {
-	        System.out.println(fresh.ansatte.get(0));			
-		}else {
-			System.out.println("No ansatte found, WHAT THE FUCK");
-		}
-        return fresh.ansatte;
+		return ansatte;
 	}
 	
 	@Override
@@ -87,7 +91,8 @@ public class Avdeling {
 	 */
 
 	public List<Ansatt> finnAnsatte(){
-		return AnsattDAO.findByAvdelingId(id);
+		return getAnsatte();
+		//return AnsattDAO.findByAvdelingId(id);
 	}
 
 
@@ -135,6 +140,15 @@ public class Avdeling {
 		this.navn = navn;
 	}
 
+	
+	/**
+	 * @param add ansatt
+	 * @return void
+	 */
+	public void addAnsatt(Ansatt ansatt) {
+		ansatte.add(ansatt);
+		ansatt.setAvdeling(this);
+	}
 
 	/**
 	 * 

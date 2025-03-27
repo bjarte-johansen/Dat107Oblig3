@@ -124,6 +124,8 @@ public class DemoData {
 
 		// sett inn ansatte
 		for(int i=0; i<fornavn.length; i++) {
+			Avdeling avd = avdelinger[i % avdelinger.length]; 
+			
 			Ansatt a1 = new Ansatt();
 			a1.setFornavn(String.valueOf((char)((int) 'a' + i)));
 			a1.setEtternavn(String.valueOf((char)((int) 'a' + i)));
@@ -131,8 +133,11 @@ public class DemoData {
 			a1.setAnsettelseDato(createRandomDate());
 			a1.setStilling(stilling[i]);
 			a1.setLoennPerMaaned((float) 1001 + i);
-			a1.setAvdeling(avdelinger[i % avdelinger.length]);
+			avd.addAnsatt(a1);
 			DatabaseDAO.saveEntity(a1, null);
+			
+			//avdelinger[i % avdelinger.length].ansatte.add(a1);
+			//DatabaseDAO.saveEntity(avdelinger[i % avdelinger.length], Avdeling::getId);
 		}
 		
 		// sett leder for hver avdeling

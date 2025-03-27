@@ -47,15 +47,14 @@ class DatabaseDAO{
 
 	
 	
+	
 	/**
 	 * parametric way to get list of any entity that has a model
-	 * @param <T>s
-	 * @param entityInstance
 	 * @param clazz
 	 * @return List<T>
 	 */
 	
-	public static <T> List<T> getAnyEntityList(Class<T> clazz){
+	public static <T> List<T> findAll(Class<T> clazz){
 		EntityManager em = StaticEMF.getNewEM();
 		List<T> items = em
 			.createQuery("SELECT o FROM " + clazz.getSimpleName() + " o", clazz)
@@ -69,10 +68,10 @@ class DatabaseDAO{
 	 * specific way to get list of Ansatt 
 	 */
 	
-	public static List<Ansatt> getAnsattList(){	return getAnyEntityList(Ansatt.class); }	
-	public static List<Prosjekt> getProsjektList(){	return getAnyEntityList(Prosjekt.class); }		
-	public static List<Avdeling> getAvdelingList(){ return getAnyEntityList(Avdeling.class); }	
-	public static List<AnsattProsjektPivot> getAnsattProsjektPivotList(){ return getAnyEntityList(AnsattProsjektPivot.class); }	
+	public static List<Ansatt> getAnsattList(){	return findAll(Ansatt.class); }	
+	public static List<Prosjekt> getProsjektList(){	return findAll(Prosjekt.class); }		
+	public static List<Avdeling> getAvdelingList(){ return findAll(Avdeling.class); }	
+	public static List<AnsattProsjektPivot> getAnsattProsjektPivotList(){ return findAll(AnsattProsjektPivot.class); }	
 	
 
 	/*
@@ -118,7 +117,7 @@ class DatabaseDAO{
 	public static void printEntityList(Class<?> clazz) {				
 		System.out.println("# Liste over " + clazz.getSimpleName().toLowerCase() + "(e/er/ere):");
 		
-		List<?> items = getAnyEntityList(clazz);		
+		List<?> items = DatabaseDAO.findAll(clazz);		
 		printEntityListItems(items);	
 		
 		System.out.println();
@@ -258,6 +257,7 @@ public class Main {
 			
 			List<Ansatt> emps = dept.getAnsatte();
 			System.out.println("Ansatte: (" + emps.size() + ")");
+			
 			for (Ansatt emp : emps) {
 				if(emp.equals(dept.getLeder())) {
 					System.out.print("[Leder ");
@@ -475,64 +475,78 @@ public class Main {
             System.out.println();
 		}
 	}
+	
+	/*
+	 * teststuff fordi jeg faen ikke får til OneToMany
+	 * uten å skrive JPQL query som henter List<Ansatt>
+	 * i stedet for å bruke @OneToMany
+	 */
+	/*
+	public static void testOneToManyForAvdelingAnsatte() {
+
+
+		Avdeling avd1 = StaticEMF.getNewEM().find(Avdeling.class, 1);
+		
+		var em = StaticEMF.getNewEM();
+		avd1 = em.merge(avd1);
+		
+		System.out.println("using List<>");
+		System.out.println("antall ansatte: " + avd1.ansatte.size());			
+		for(Ansatt ansatt : avd1.ansatte) {
+			System.out.println(ansatt);
+		}
+		System.out.println();
+		
+		System.out.println("using getAnsatte()");
+		System.out.println("antall ansatte: " + avd1.getAnsatte().size());			
+		for(Ansatt ansatt : avd1.ansatte) {
+			System.out.println(ansatt);
+		}
+		System.out.println();
+
+		System.out.println("using JPQL");
+		System.out.println("antall ansatte: " + avd1.finnAnsatte().size());						
+		for(Ansatt ansatt : avd1.finnAnsatte()) {
+			System.out.println(ansatt);
+		}
+		System.out.println();
+		
+		List<Avdeling> avdelinger2 = StaticEMF.getNewEM().createQuery(
+			    "SELECT d FROM Avdeling d LEFT JOIN FETCH d.ansatte", Avdeling.class)
+			    .getResultList();	
+		for (int i = 0; i < avdelinger2.size(); i++) {
+			System.out.println(avdelinger2.get(i));
+			System.out.println("antall ansatte: " + avdelinger2.get(i).ansatte.size());
+		}
+		System.out.println();		
+{	
+		Avdeling avd2 = Avdeling.findAvdelingById(1);
+		System.out.println("using JPQL left join fetch");
+		System.out.println("antall ansatte: " + avd2.getAnsatte().size());
+		System.out.println();
+}		
+
+		System.out.println("using JPQL with LEFT JOIN FETCH");
+		TypedQuery<Avdeling> q = em.createQuery(
+		  "SELECT a FROM Avdeling a LEFT JOIN FETCH a.ansatte WHERE a.id = :id", Avdeling.class);
+		q.setParameter("id", 1);
+		Avdeling a = q.getSingleResult();
+
+		System.out.println("Ansatte: " + a.ansatte.size()); // Should not be empty
+		System.out.println();
+					
+		
+		em.close();	
+	}
+*/
 
 	public static void main(String[] args) {
 		// handle demo data
 		handleDatabaseDemoData();
-		
-		/*
-		 * teststuff fordi jeg faen ikke får til OneToMany
-		 * uten å skrive JPQL query som henter List<Ansatt>
-		 * i stedet for å bruke @OneToMany
-		 */
-		{
-			Avdeling avd1 = StaticEMF.getNewEM().find(Avdeling.class, 1);
-			
-			var em = StaticEMF.getNewEM();
-			avd1 = em.merge(avd1);
-			
-			System.out.println("using List<>");
-			System.out.println("antall ansatte: " + avd1.ansatte.size());			
-			for(Ansatt ansatt : avd1.ansatte) {
-				System.out.println(ansatt);
-			}
-			System.out.println();
-			
-			System.out.println("using getAnsatte()");
-			System.out.println("antall ansatte: " + avd1.getAnsatte().size());			
-			for(Ansatt ansatt : avd1.ansatte) {
-				System.out.println(ansatt);
-			}
-			System.out.println();
-
-			System.out.println("using JPQL");
-			System.out.println("antall ansatte: " + avd1.finnAnsatte().size());						
-			for(Ansatt ansatt : avd1.finnAnsatte()) {
-				System.out.println(ansatt);
-			}
-			System.out.println();
-			
-			List<Avdeling> avdelinger2 = StaticEMF.getNewEM().createQuery(
-				    "SELECT d FROM Avdeling d LEFT JOIN FETCH d.ansatte", Avdeling.class)
-				    .getResultList();	
-			for (int i = 0; i < avdelinger2.size(); i++) {
-				System.out.println(avdelinger2.get(i));
-				System.out.println("antall ansatte: " + avdelinger2.get(i).ansatte.size());
-			}
-			
-
-			System.out.println("using JPQL with LEFT JOIN FETCH");
-			TypedQuery<Avdeling> q = em.createQuery(
-			  "SELECT a FROM Avdeling a LEFT JOIN FETCH a.ansatte WHERE a.id = :id", Avdeling.class);
-			q.setParameter("id", 1);
-			Avdeling a = q.getSingleResult();
-
-			System.out.println("Ansatte: " + a.ansatte.size()); // Should not be empty
-			System.out.println();
-						
-			
-			em.close();
-		}
+				
+		// test OneToMany for avdeling -> ansatte
+		// no longer required to be tested but not removed
+		// testOneToManyForAvdelingAnsatte();
 		
 		// create menu items
 		Menu.init();
