@@ -480,6 +480,11 @@ public class Main {
 		// handle demo data
 		handleDatabaseDemoData();
 		
+		/*
+		 * teststuff fordi jeg faen ikke får til OneToMany
+		 * uten å skrive JPQL query som henter List<Ansatt>
+		 * i stedet for å bruke @OneToMany
+		 */
 		{
 			Avdeling avd1 = StaticEMF.getNewEM().find(Avdeling.class, 1);
 			
@@ -506,6 +511,14 @@ public class Main {
 				System.out.println(ansatt);
 			}
 			System.out.println();
+			
+			List<Avdeling> avdelinger2 = StaticEMF.getNewEM().createQuery(
+				    "SELECT d FROM Avdeling d LEFT JOIN FETCH d.ansatte", Avdeling.class)
+				    .getResultList();	
+			for (int i = 0; i < avdelinger2.size(); i++) {
+				System.out.println(avdelinger2.get(i));
+				System.out.println("antall ansatte: " + avdelinger2.get(i).ansatte.size());
+			}
 			
 
 			System.out.println("using JPQL with LEFT JOIN FETCH");

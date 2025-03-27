@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -31,7 +32,7 @@ public class Ansatt {
 	private String stilling;
 	private Float loennPerMaaned;
 	
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "avdelingId")
 	private Avdeling avdeling;
 	
