@@ -3,9 +3,11 @@ package Entities;
 import java.sql.Date;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
@@ -14,9 +16,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import main.EntityFormatter;
+import testing.EntityFormatter;
 
 @Entity
 public class Ansatt {
@@ -39,6 +42,14 @@ public class Ansatt {
 	@OneToOne(mappedBy = "leder")
 	private Avdeling leder;
 	
+	@OneToMany(mappedBy = "ansatt", cascade = CascadeType.ALL)
+	private List<AnsattProsjektPivot> prosjekter = new ArrayList<>();	
+	
+	
+	public List<AnsattProsjektPivot> getProsjekter(){
+		return prosjekter;
+	}
+	
 	/**
 	 * @return the ansettelsedato
 	 */
@@ -53,6 +64,15 @@ public class Ansatt {
 		this.ansettelsedato = ansettelsedato;
 	}
 
+	
+	/**
+	 * @return om ansatt er leder
+	 */
+	public boolean erAvdelingsLeder() {
+		return avdeling.getLeder().equals(this);
+	}
+	
+	
 	/**
 	 * @return the leder
 	 */
@@ -204,31 +224,35 @@ public class Ansatt {
 	}
 	
 	/**
+	 * @param Prosjekt navn som string array
+	 * @return String[] of prosjektnavn
+	 */
+	
+	public String[] getProsjektNavnAsArray() {
+		ArrayList<String> result = new ArrayList<>(16);
+		for (AnsattProsjektPivot piv : prosjekter) {
+			result.add(piv.getProsjekt().getNavn());
+		}
+		return result.toArray(new String[0]);
+	}
+	
+	/**
 	 * @return descriptive string
 	 */
 
 	@Override
-    public String toString() {
-		/*
-		String props[] = new String[] { 
-			"id", "" + id,
-			"navn, etternavn, bruker", getFornavn() + ", " + getEtternavn() + ", " + brukernavn,
-			//"brukernavn", brukernavn,
-			//"fornavn", fornavn, 
-			//"etternavn", etternavn,
-			"stilling, avdeling", stilling + ", " + "" + avdeling, 
-			"erLeder", ((avdeling != null) && avdeling.getLeder().equals(this)) ? "Ja" : "Nei",			
-			//"stilling", stilling, 			
-			"ansattelseDato", "" + ansettelsedato,
-			"lonnPerMaaned", "" + loennPerMaaned
-			};		
-	    return EntityFormatter.formatEntity("Ansatt", props);
-		*/	    
-    	
+    public String toString() {    	
     	// simplified output
 		String tmpStilling = (stilling != null) ? stilling : "ukjent stilling";
-		return "Ansatt [id=" + id + ", \"" + getEtternavn() + ", " + getFornavn() + "\" (u:" + brukernavn + "), " + tmpStilling + " v/" + avdeling.getNavn() + ", ansatt=" + ansettelsedato.toLocalDate() + ", lønn=" + loennPerMaaned  + "/month]";
-    	//return "Ansatt [id=" + id + ", navn=" + getEtternavn() + ", " + getFornavn() + " (" + brukernavn + "), stilling=" + stilling + ", avdeling=" + avdeling.getNavn() + ", ansettelsedato=" + ansettelsedato.toLocalDate() + ", loennPerMaaned=" + loennPerMaaned  + "]";    	
-    	//return "Ansatt [id=" + id + ", brukernavn=" + brukernavn + ", stilling=" + stilling + ", avdeling=" + avdeling + ", fornavn=" + fornavn + ", etternavn=" + etternavn + ", ansettelsedato=" + ansettelsedato + ", loennPerMaaned=" + loennPerMaaned  + "]";
+		return "Ansatt [" 
+			+ "id=" + id 
+			+ ", \"" + getEtternavn() 
+			+ ", " + getFornavn() 
+			+ "\" (u:" + brukernavn + ")" 
+			+ ", " + tmpStilling + " v/" + avdeling.getNavn() 
+			+ ", ansatt=" + ansettelsedato.toLocalDate() 
+			+ ", lønn=" + loennPerMaaned  
+			+ "/month, prosjekter: " + Arrays.toString(getProsjektNavnAsArray())
+			+ "]";
     }
 }

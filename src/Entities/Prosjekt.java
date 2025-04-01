@@ -2,15 +2,17 @@ package Entities;
 
 import java.util.List;
 
+import DAO.ProsjektDAO;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import main.ProsjektDAO;
+import jakarta.persistence.CascadeType;
 import main.StaticEMF;
 
 @Entity
@@ -23,10 +25,14 @@ public class Prosjekt {
 	private String navn;
 	private String beskrivelse;
 	
+	@OneToMany(mappedBy = "prosjekt", orphanRemoval = true, cascade = CascadeType.ALL)
+	private List<AnsattProsjektPivot> deltagere;
 	
 	public List<AnsattProsjektPivot> getDeltagere(){
-		return ProsjektDAO.findParticipants(this.id);
+		return deltagere;
+		//return ProsjektDAO.findParticipants(this.id);
 	};
+	
 	
 	/**
 	 * @return the id

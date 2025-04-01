@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import DAO.AnsattDAO;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -17,12 +18,10 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.TypedQuery;
-import main.AnsattDAO;
 import main.StaticEMF;
 
 
 @Entity
-//@Table(name="Avdeling", schema = "public")
 public class Avdeling {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY) // or AUTO
@@ -30,27 +29,18 @@ public class Avdeling {
 	
 
 	private String navn;
-	
-
 
 	@OneToOne
 	@JoinColumn(name = "lederId")
 	private Ansatt leder;
 
 	@OneToMany(mappedBy = "avdeling", fetch = FetchType.EAGER)
-	public List<Ansatt> ansatte = new ArrayList<>();
-	/*
-	public static Avdeling findAvdelingById(Integer id) {
-        var em = StaticEMF.getNewEM();
-        TypedQuery<Avdeling> query = em.createQuery(
-        	    "SELECT a FROM Avdeling a LEFT JOIN FETCH a.ansatte WHERE a.id = :id", Avdeling.class);
-    	query.setParameter("id", 1L);
-    	Avdeling avdeling = query.getSingleResult();
-    	return avdeling;
-    }
-    */
-		
+	public List<Ansatt> ansatte = new ArrayList<>();	
 	
+	
+	/**
+	 * @return the ansatte
+	 */
 	public List<Ansatt > getAnsatte(){
 		return ansatte;
 	}
@@ -74,30 +64,8 @@ public class Avdeling {
 		Avdeling other = (Avdeling) obj;
 		return Objects.equals(id, other.id);
 	}	
-
-	/**
-	 * @return the ansatte
-	 */
-/*
-	public List<Ansatt> getAnsatte() {
-		//return ansatte;
-		return finnAnsatte();
-	}
-*/	
-
 	
-	/**
-	 * @return the ansatte
-	 */
-
-	public List<Ansatt> finnAnsatte(){
-		return getAnsatte();
-		//return AnsattDAO.findByAvdelingId(id);
-	}
-
-
-
-
+	
 	/**
 	 * @return the leder
 	 */

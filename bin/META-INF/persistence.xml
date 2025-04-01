@@ -19,6 +19,11 @@ version="3.0">
 		<!-- EclipseLink properties -->
 		<!-- Se https://wiki.eclipse.org/EclipseLink/Examples/JPA/Logging -->
 		<property name="eclipselink.logging.level" value="WARNING"/>
+		
+		<!--
+		<property name="eclipselink.logging.level.sql" value="FINE"/>
+		<property name="eclipselink.logging.parameters" value="true"/>
+		-->		
 	</properties>
 </persistence-unit>
 </persistence>

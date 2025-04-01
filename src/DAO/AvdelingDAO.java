@@ -1,7 +1,8 @@
-package main;
+package DAO;
 
 import Entities.Avdeling;
 import jakarta.persistence.NoResultException;
+import main.StaticEMF;
 
 public class AvdelingDAO{
 	/*

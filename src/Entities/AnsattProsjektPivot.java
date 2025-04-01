@@ -7,26 +7,28 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(schema = "public")
 public class AnsattProsjektPivot {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY) // or AUTO
 	private Integer id;
 	
-	@OneToOne
-	@JoinColumn(name="ansattId")
+	@ManyToOne
+	@JoinColumn(name = "ansattId")
 	private Ansatt ansatt;
 	
-	@OneToOne
-	@JoinColumn(name="prosjektId")
+	@ManyToOne
+	@JoinColumn(name = "prosjektId")
 	private Prosjekt prosjekt;
 	
 	private String rolle;	
 	private Integer antallTimer;
+
+	
 	
 	/**
 	 * @return the rolle

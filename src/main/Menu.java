@@ -3,6 +3,7 @@ package main;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+
 /*
  * menu item class
  */
@@ -12,6 +13,11 @@ interface MenuAction{
 	void execute();
 };
 
+
+
+/*
+ * menu item base class
+ */
 
 class MenuItemBase{
 	private int key;
@@ -49,6 +55,12 @@ class MenuItemBase{
         return String.format("%-4s ", key + ".") + text;
     }
 };
+
+
+
+/*
+ * menu class
+ */
 
 public class Menu {
 	public static class MenuItem extends MenuItemBase{
@@ -124,24 +136,25 @@ public class Menu {
 	}
 	
 	public static void init() {
-		addMenuItem(1, "Ansatt, list", Main::action_employee_list);	
-		addMenuItem(2, "Ansatt, finn etter id", Main::action_employee_find_by_id);	
-		addMenuItem(3, "Ansatt, finn etter brukernavn", Main::action_employee_find_by_username);
-		addMenuItem(4, "Ansatt, endre stilling og lønn", Main::action_set_position_and_salary);
-		addMenuItem(5, "Ansatt, legg til", Main::action_employee_add);
-		addMenuItem(6, "Ansatt, finn etter avdeling", Main::action_employee_find_by_department);		
-		addMenuItem(7, "Ansatt, endre avdeling", Main::action_employee_update_department);			
+		// addMenuItem(choice, "title", actionMethodReference);
+		addMenuItem(1, "Ansatt, list", MenuActionImpl::action_employee_list);	
+		addMenuItem(2, "Ansatt, finn etter id", MenuActionImpl::action_employee_find_by_id);	
+		addMenuItem(3, "Ansatt, finn etter brukernavn", MenuActionImpl::action_employee_find_by_username);
+		addMenuItem(4, "Ansatt, endre stilling og lønn", MenuActionImpl::action_set_position_and_salary);
+		addMenuItem(5, "Ansatt, legg til", MenuActionImpl::action_employee_add);
+		addMenuItem(6, "Ansatt, finn etter avdeling", MenuActionImpl::action_employee_find_by_department);		
+		addMenuItem(7, "Ansatt, endre avdeling", MenuActionImpl::action_employee_update_department);			
 		addMenuItem(-1, null, null);
-		addMenuItem(8, "Avdeling, list", Main::action_department_list);
-		addMenuItem(9, "Avdeling, finn etter id", Main::action_department_find_by_id);		
-		addMenuItem(10, "Avdeling, legg til", Main::action_department_add);		
+		addMenuItem(8, "Avdeling, list", MenuActionImpl::action_department_list);
+		addMenuItem(9, "Avdeling, finn etter id", MenuActionImpl::action_department_find_by_id);		
+		addMenuItem(10, "Avdeling, legg til", MenuActionImpl::action_department_add);		
 		addMenuItem(-1, null, null);		
-		addMenuItem(11, "Prosjekt, list", Main::action_project_list);
-		addMenuItem(12, "Prosjekt, finn etter id", Main::action_project_find_by_id);
-		addMenuItem(13, "Prosjekt, legg til", Main::action_project_add);
-		addMenuItem(14, "Prosjekt, legg til ansatt", Main::action_project_add_participant_by_project_id);
-		addMenuItem(15, "Prosjekt, legg til timer", Main::action_project_add_participant_hours_by_project_id);
-		addMenuItem(16, "Prosjekt, vis detaljer etter id", Main::action_project_list_details);
+		addMenuItem(11, "Prosjekt, list", MenuActionImpl::action_project_list);
+		addMenuItem(12, "Prosjekt, finn etter id", MenuActionImpl::action_project_find_by_id);
+		addMenuItem(13, "Prosjekt, legg til", MenuActionImpl::action_project_add);
+		addMenuItem(14, "Prosjekt, legg til ansatt", MenuActionImpl::action_project_add_participant_by_project_id);
+		addMenuItem(15, "Prosjekt, legg til timer", MenuActionImpl::action_project_add_participant_hours_by_project_id);
+		addMenuItem(16, "Prosjekt, vis detaljer etter id", MenuActionImpl::action_project_list_details);
 		addMenuItem(-1, null, null);
 		addMenuItem(0, "Avslutt", null);
 	}

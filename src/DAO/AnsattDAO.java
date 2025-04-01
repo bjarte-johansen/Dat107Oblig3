@@ -1,9 +1,10 @@
-package main;
+package DAO;
 
 import java.util.List;
 
 import Entities.Ansatt;
 import jakarta.persistence.NoResultException;
+import main.StaticEMF;
 
 public class AnsattDAO{
 	/*
